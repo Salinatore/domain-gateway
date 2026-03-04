@@ -84,3 +84,41 @@ graph
   R1 <--> M
 ```
 
+```mermaid
+---
+title: Dashboard decision base offloading
+---
+sequenceDiagram
+    Dashboard->>Robot: offloading request
+    Robot->>Robot: evaluate feasibility 
+    alt accepted request 
+    Robot->>Dashboard: ok
+    Robot->>Aggregate-Runtime: stop calculate for robot
+    else request rejected
+    Robot->>Dashboard: no ok
+    end
+    Dashboard->>Robot: Stop offloading request
+    Robot->>Dashboard: ok
+    Robot->>Aggregate-Runtime: calculate for robot
+
+
+```
+
+
+```mermaid
+---
+title: An Offloading manager that take the decision whith the possibility of a coresponsability of a dashboard
+---
+sequenceDiagram
+    Offloading-Manager->>Robot: offloading request
+    Robot->>Robot: evaluate feasibility 
+    alt accepted request 
+    Robot->>Offloading-Manager: ok
+    Offloading-Manager->>Aggregate-Runtime: stop calculate for robot
+    else request rejected
+    Robot->>Offloading-Manager: no ok
+    end
+    Offloading-Manager->>Robot: Stop offloading request
+    Robot->>Offloading-Manager: ok
+    Offloading-Manager->>Aggregate-Runtime: calculate for robot
+```
