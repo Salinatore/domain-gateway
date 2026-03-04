@@ -3,7 +3,7 @@
 title: Central MQTT with cache for non MQTT.
 ---
 graph 
-  AR[aggregata-runtime]
+  AR[aggregate-runtime]
   AD[aruco-detector]
   D[dashboard]
   NS[neighborhood-system]
@@ -23,7 +23,7 @@ graph
     C[cache]
   end
 
-  T <--> R2
+  T <-->R2
   T <--> M
   R1 <--> M
 ```
@@ -33,7 +33,7 @@ graph
 title: Central REST server with endpoint for robot communication.
 ---
 graph 
-  AR[aggregata-runtime]
+  AR[aggregate-runtime]
   AD[aruco-detector]
   D[dashboard]
   NS[neighborhood-system]
@@ -61,7 +61,7 @@ graph
 title: Central MQTT, tranlation server just for redirection.
 ---
 graph 
-  AR[aggregata-runtime]
+  AR[aggregate-runtime]
   AD[aruco-detector]
   D[dashboard]
   NS[neighborhood-system]
