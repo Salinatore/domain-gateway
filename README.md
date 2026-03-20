@@ -1,1 +1,0 @@
-In VSCode install Markdown Preview Mermaid Support by Matt Bierner.
