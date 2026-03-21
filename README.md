@@ -118,5 +118,15 @@ GET /offloading/movement/stream
 Canale bidirezionale tra l'offloading manager e un singolo robot. Il server può richiedere al robot di computare localmente, il robot può accettare, rifiutare o notificare che non è più in grado di farlo.
 
 ```
+# Server initiated
+Server ---"compute locally"---> Robot
+Robot  ---"accept/deny"-------> Server
+
+# Robot initiated  
+Robot  ---"can't compute"-----> Server
+Server ---"acknowledged"------> Robot
+```
+
+```
 WS /ws/offloading/robots/{robot_id}
 ```
