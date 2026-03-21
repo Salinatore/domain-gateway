@@ -24,10 +24,8 @@ GET /subscription/sensing
 
 **Query params** (permette di sottoscriversi a più topic con una sola connessione):
 ```
-GET /subscription?topic=robots/position
-GET /subscription?topic=robots/{robot_id}/position
-GET /subscription?topic=leader
-GET /subscription?topic=robots/position&topic=leader
+GET /subscription/position?topic=robots
+GET /subscription/position?topic=robots&topic=leader
 ```
 
 Publish:
@@ -47,10 +45,8 @@ Unico protocollo per subscribe e publish. La subscribe usa query params per perm
 
 ```
 # subscribe
-WS /ws/subscription?topic=robots/position
-WS /ws/subscription?topic=robots/{robot_id}/position
-WS /ws/subscription?topic=leader
-WS /ws/subscription?topic=robots/position&topic=leader
+WS /ws/subscription/position?topic=robots
+WS /ws//subscription/position?topic=robots&topic=leader
 
 # publish
 WS /ws/publish/robots/{robot_id}/position
@@ -68,10 +64,8 @@ SSE per la subscribe, WebSocket per la publish. Utile se i client che pubblicano
 
 ```
 # subscribe (SSE)
-GET /subscription?topic=robots/position
-GET /subscription?topic=robots/{robot_id}/position
-GET /subscription?topic=leader
-GET /subscription?topic=robots/position&topic=leader
+GET /subscription/position?topic=robots
+GET /subscription/position?topic=robots&topic=leader
 
 # publish (WebSocket)
 WS /ws/publish/robots/{robot_id}/position
