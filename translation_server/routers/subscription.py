@@ -1,31 +1,35 @@
+from uuid import UUID
+
 from fastapi import APIRouter, HTTPException, status
 
-subscriptions_router = APIRouter(
-    prefix="/subscriptions",
-    tags=["subscriptions"],
+from translation_server.models.responces.subscription import (
+    SubscriptionCreate,
+    SubscriptionResponse,
+    SubscriptionUpdate,
 )
+
+subscriptions_router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
 
 
 @subscriptions_router.get("/{subscription_id}")
-async def read_subscription(subscription_id: str):
+async def read_subscription(subscription_id: UUID) -> SubscriptionResponse:
     raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
 
 
-@subscriptions_router.post("")
-async def create_subscription():
+@subscriptions_router.post("", status_code=status.HTTP_201_CREATED)
+async def create_subscription(body: SubscriptionCreate) -> SubscriptionResponse:
     raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
 
 
-@subscriptions_router.delete("/{subscription_id}")
-async def delete_subscription(subscription_id: str):
+@subscriptions_router.delete(
+    "/{subscription_id}", status_code=status.HTTP_204_NO_CONTENT
+)
+async def delete_subscription(subscription_id: UUID) -> None:
     raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
 
 
 @subscriptions_router.put("/{subscription_id}")
-async def update_subscription(subscription_id: str):
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
-
-
-@subscriptions_router.patch("/{subscription_id}")
-async def partial_update_subscription(subscription_id: str):
+async def update_subscription(
+    subscription_id: UUID, body: SubscriptionUpdate
+) -> SubscriptionResponse:
     raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
