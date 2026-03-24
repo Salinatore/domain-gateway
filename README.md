@@ -84,28 +84,19 @@ WS /ws/publish/sensing
 ```
 GET  /                    # stato di offloading di tutti i robot
 GET  /{robot_id}          # stato di offloading di un robot specifico
-POST /{robot_id}          # aggiorna lo stato di offloading di un robot
+PUT /{robot_id}          # aggiorna lo stato di offloading di un robot
 GET  /system-stress       # carico attuale del sistema
 ```
+### Comunicazione con altri moduli (WebSocket)
 
-### Istruzioni ai moduli (SSE)
+Canali weebsoket per permettere comunicazione con i vari moduli, il server manda aggiornamenti sullo stato dei robot per i quali devono compiere calcoli 
 
-L'offloading manager notifica i moduli di processing su quali robot devono computare. Sono in discussione due strutture:
-
-**Path-based:** (un unico endpoint, il modulo dichiara la propria capability):
 ```
-GET /offloading/stream?capability=position
-GET /offloading/stream?capability=neighbor
-GET /offloading/stream?capability=movement
-GET /offloading/stream?capability=position&capability=movement
+WS /ws/position
+WS /ws/aggregate
+WS /ws/neighboor
 ```
 
-**Query params** (un endpoint dedicato per capability):
-```
-GET /offloading/position/stream
-GET /offloading/neighbor/stream
-GET /offloading/movement/stream
-```
 
 ### Comunicazione con i robot (WebSocket)
 
@@ -122,5 +113,13 @@ Server ---"acknowledged"------> Robot
 ```
 
 ```
-WS /ws/offloading/robots/{robot_id}
+WS /ws/robots/{robot_id}
 ```
+il nome puo essere senno 
+```
+WS /ws/{robot_id}
+```
+
+richieste di offloading da parte robot possono avvennire sia tramite websocket che traminte l'endopint prenisposto rest "PUT /{robot_id} " dove passano tutte il resto delle richiete provenienti dai vari moduli.
+
+
