@@ -26,17 +26,21 @@ class RobotNeighbors(BaseModel):
     neighbors: list[int]  # list of neighbor robot IDs
 
 
+class RobotSensing(BaseModel):
+    pass
+
+
 # ─────────────────────────────────────────────
 # Topic: leader
 # ─────────────────────────────────────────────
-class LeaderCommand(BaseModel):
+class Leader(BaseModel):
     leader_id: int
 
 
 # ─────────────────────────────────────────────
 # Topic: sensing
 # ─────────────────────────────────────────────
-class SensingCommand(BaseModel):
+class Formation(BaseModel):
     program: str  # "pointToLeader", "vShape", …
 
     # formation-specific parameters
@@ -59,6 +63,3 @@ class SensingCommand(BaseModel):
     inter_distance_square: float | None = Field(None, alias="interDistanceSquare")
 
     model_config = {"populate_by_name": True}
-
-
-print(SensingCommand.model_json_schema(by_alias=True))

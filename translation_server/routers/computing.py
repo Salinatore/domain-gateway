@@ -11,7 +11,7 @@ async def read_formations():
     raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
 
 
-@computing_inputs_router.post("/formations")
+@computing_inputs_router.put("/formations")
 async def update_formations():
     raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
 
@@ -21,6 +21,6 @@ async def read_leader():
     raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
 
 
-@computing_inputs_router.post("/leader")
+@computing_inputs_router.put("/leader")
 async def update_leader():
     raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
