@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
-from translation_server.models.mqtt_topics import MqttTopic
+from translation_server.models.mqtt_topics import MqttTopic, RobotID
 
 # ── Request bodies ─────────────────────────────────────────────────────────────
 
@@ -22,7 +22,7 @@ class RobotTopic(BaseModel):
         | Literal[MqttTopic.ROBOT_MOVEMENT]
         | Literal[MqttTopic.ROBOT_SENSING]
     )
-    robot_id: int
+    robot_id: RobotID
 
 
 class InputTopic(BaseModel):
@@ -39,5 +39,5 @@ class SubscriptionUpdate(SubscriptionCreate):
 class SubscriptionResponse(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     topic: MqttTopic
-    robot_id: int
+    robot_id: RobotID
     created_at: datetime

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 
 from translation_server.models.mqtt_topics import (
+    RobotID,
     RobotMovement,
     RobotNeighbors,
     RobotPosition,
@@ -20,12 +21,14 @@ robots_router = APIRouter(prefix="/robots", tags=["robots"])
 
 
 @robots_router.get("/{robot_id}/position")
-async def read_robot_position(robot_id: int) -> RobotPosition:
+async def read_robot_position(robot_id: RobotID) -> RobotPosition:
     raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
 
 
 @robots_router.put("/{robot_id}/position")
-async def update_robot_position(robot_id: int, body: RobotPosition) -> PositionResponse:
+async def update_robot_position(
+    robot_id: RobotID, body: RobotPosition
+) -> PositionResponse:
     raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
 
 
@@ -33,13 +36,13 @@ async def update_robot_position(robot_id: int, body: RobotPosition) -> PositionR
 
 
 @robots_router.get("/{robot_id}/neighbors")
-async def read_robot_neighborhood(robot_id: int) -> RobotNeighbors:
+async def read_robot_neighborhood(robot_id: RobotID) -> RobotNeighbors:
     raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
 
 
 @robots_router.put("/{robot_id}/neighbors")
 async def update_robot_neighborhood(
-    robot_id: int, body: RobotNeighbors
+    robot_id: RobotID, body: RobotNeighbors
 ) -> NeighborsResponse:
     raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
 
@@ -48,12 +51,14 @@ async def update_robot_neighborhood(
 
 
 @robots_router.get("/{robot_id}/movement")
-async def read_robot_movement(robot_id: int) -> RobotMovement:
+async def read_robot_movement(robot_id: RobotID) -> RobotMovement:
     raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
 
 
 @robots_router.put("/{robot_id}/movement")
-async def update_robot_movement(robot_id: int, body: RobotMovement) -> MovementResponse:
+async def update_robot_movement(
+    robot_id: RobotID, body: RobotMovement
+) -> MovementResponse:
     raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
 
 
@@ -61,10 +66,12 @@ async def update_robot_movement(robot_id: int, body: RobotMovement) -> MovementR
 
 
 @robots_router.get("/{robot_id}/sensing")
-async def read_robot_sensing(robot_id: int) -> RobotSensing:
+async def read_robot_sensing(robot_id: RobotID) -> RobotSensing:
     raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
 
 
 @robots_router.put("/{robot_id}/sensing")
-async def update_robot_sensing(robot_id: int, body: RobotSensing) -> SensingResponse:
+async def update_robot_sensing(
+    robot_id: RobotID, body: RobotSensing
+) -> SensingResponse:
     raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)

@@ -12,8 +12,11 @@ class MqttTopic(StrEnum):
     FORMATION = "formation"
 
 
+type RobotID = int
+
+
 class RobotPosition(BaseModel):
-    robot_id: int
+    robot_id: RobotID
     x: float
     y: float
     orientation: float
@@ -25,7 +28,7 @@ class RobotMovement(BaseModel):
 
 
 class RobotNeighbors(BaseModel):
-    neighbors: list[int]
+    neighbors: list[RobotID]
 
 
 class RobotSensing(BaseModel):
@@ -33,13 +36,12 @@ class RobotSensing(BaseModel):
 
 
 class Leader(BaseModel):
-    leader_id: int
+    leader_id: RobotID
 
 
 class Formation(BaseModel):
     program: str
 
-    leader: int | None = None
     collision_area: float | None = Field(None, alias="collisionArea")
     stability_threshold: float | None = Field(None, alias="stabilityThreshold")
 
