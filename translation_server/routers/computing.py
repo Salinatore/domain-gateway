@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 
+from translation_server.models.connections.mqtt import FormationResponse, LeaderResponse
 from translation_server.models.mqtt_topics import Formation, Leader
-from translation_server.models.responces.mqtt import FormationResponse, LeaderResponse
 
 computing_inputs_router = APIRouter(prefix="/computing/inputs", tags=["inputs"])
 

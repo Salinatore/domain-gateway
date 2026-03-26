@@ -1,17 +1,17 @@
 from fastapi import APIRouter, HTTPException, status
 
+from translation_server.models.connections.mqtt import (
+    MovementResponse,
+    NeighborsResponse,
+    PositionResponse,
+    SensingResponse,
+)
 from translation_server.models.mqtt_topics import (
     RobotID,
     RobotMovement,
     RobotNeighbors,
     RobotPosition,
     RobotSensing,
-)
-from translation_server.models.responces.mqtt import (
-    MovementResponse,
-    NeighborsResponse,
-    PositionResponse,
-    SensingResponse,
 )
 
 robots_router = APIRouter(prefix="/robots", tags=["robots"])
