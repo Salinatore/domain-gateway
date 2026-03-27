@@ -1,12 +1,12 @@
 from fastapi import APIRouter, HTTPException, status
 
-from translation_server.models.connections.mqtt import (
+from domain_gateway.models.connections.mqtt import (
     MovementResponse,
     NeighborsResponse,
     PositionResponse,
     SensingResponse,
 )
-from translation_server.models.mqtt_topics import (
+from domain_gateway.models.mqtt_topics import (
     RobotID,
     RobotMovement,
     RobotNeighbors,

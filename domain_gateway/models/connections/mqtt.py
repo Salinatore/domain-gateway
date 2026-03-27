@@ -3,7 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from translation_server.models.mqtt_topics import (
+from domain_gateway.models.mqtt_topics import (
     Formation,
     Leader,
     MqttTopic,

@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status
 
-from translation_server.models.connections.subscription import (
+from domain_gateway.models.connections.subscription import (
     SubscriptionCreate,
     SubscriptionResponse,
     SubscriptionUpdate,

@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
-from translation_server.models.mqtt_topics import MqttTopic, RobotID
+from domain_gateway.models.mqtt_topics import MqttTopic, RobotID
 
 # ── Request bodies ─────────────────────────────────────────────────────────────
 

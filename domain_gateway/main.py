@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from translation_server.routers import computing, robots, subscription
+from domain_gateway.routers import computing, robots, subscription
 
 app = FastAPI(title="Translation Server")
 
