@@ -1,16 +1,4 @@
-from enum import StrEnum
-
 from pydantic import BaseModel, Field
-
-
-class MqttTopic(StrEnum):
-    ROBOT_POSITION = "robots/{id}/position"
-    ROBOT_NEIGHBORS = "robots/{id}/neighbors"
-    ROBOT_MOVEMENT = "robots/{id}/movement"
-    ROBOT_SENSING = "robots/{id}/sensing"
-    LEADER = "leader"
-    FORMATION = "formation"
-
 
 type RobotID = int
 
