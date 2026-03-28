@@ -42,3 +42,8 @@ class Formation(BaseModel):
     radius: float | None = None
 
     inter_distance_square: float | None = Field(None, alias="interDistanceSquare")
+
+
+type TopicPayload = (
+    RobotPosition | RobotMovement | RobotNeighbors | RobotSensing | Leader | Formation
+)
