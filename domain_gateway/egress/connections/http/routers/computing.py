@@ -1,7 +1,10 @@
 from fastapi import APIRouter, HTTPException, status
 
-from domain_gateway.models.connections.mqtt import FormationResponse, LeaderResponse
-from domain_gateway.models.mqtt_topics import Formation, Leader
+from domain_gateway.egress.connections.http.models.responses import (
+    FormationResponse,
+    LeaderResponse,
+)
+from domain_gateway.models.topic.payloads import Formation, Leader
 
 computing_inputs_router = APIRouter(prefix="/computing/inputs", tags=["inputs"])
 

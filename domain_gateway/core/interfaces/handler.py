@@ -1,7 +1,7 @@
 from abc import ABC
 
-from domain_gateway.models.connections.mqtt import TopicPath
-from domain_gateway.models.mqtt_topics import TopicPayload
+from domain_gateway.models.topic.paths import TopicPath
+from domain_gateway.models.topic.payloads import TopicPayload
 
 
 class Handler(ABC):

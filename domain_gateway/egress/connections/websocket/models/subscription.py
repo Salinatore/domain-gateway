@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
-from domain_gateway.models.connections.mqtt import TopicPath
+from domain_gateway.models.topic.paths import TopicPath
 
 # ── Request bodies ─────────────────────────────────────────────────────────────
 
