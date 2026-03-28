@@ -21,12 +21,12 @@ class WebsocketHandler(BaseHandler, MessageHandler):
         return self._router
 
     @override
-    async def start(self) -> None:
-        raise NotImplementedError("To be implemented.")
+    async def start(self, message_handler: MessageHandler) -> None:
+        pass
 
     @override
     async def stop(self) -> None:
-        raise NotImplementedError("To be implemented.")
+        pass
 
     @override
     def update(self, topic: TopicPath, payload: TopicPayload) -> None:

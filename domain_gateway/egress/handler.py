@@ -1,3 +1,4 @@
+import asyncio
 from typing import override
 
 from fastapi import APIRouter
@@ -25,12 +26,14 @@ class EgressHandler(BaseHandler, MessageHandler):
         return self._router
 
     @override
-    async def start(self) -> None:
-        raise NotImplementedError("To be implemented.")
+    async def start(self, message_handler: MessageHandler) -> None:
+        await asyncio.gather(
+            *(connection.start(message_handler) for connection in self.connections)
+        )
 
     @override
     async def stop(self) -> None:
-        raise NotImplementedError("To be implemented.")
+        await asyncio.gather(*(connection.stop() for connection in self.connections))
 
     @override
     def update(self, topic: TopicPath, payload: TopicPayload) -> None:

@@ -5,6 +5,7 @@ description = "Protocol-agnostic gateway for bidirectional communication with th
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "aiomqtt>=2.5.1",
     "fastapi[standard]>=0.135.1",
     "pydantic>=2.12.5",
 ]
