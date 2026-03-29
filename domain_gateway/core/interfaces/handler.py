@@ -11,7 +11,7 @@ class MessageHandler(ABC):
     def update(self, topic: TopicPath, payload: TopicPayload) -> None: ...
 
 
-class BaseHandler(ABC):
+class ConnectionHandler(ABC):
     @abstractmethod
     async def start(self, message_handler: MessageHandler) -> None: ...
 
@@ -25,3 +25,7 @@ class BaseHandler(ABC):
         Protocols like CoAP or MQTT return None (default).
         """
         return None
+
+
+class Handler(MessageHandler, ConnectionHandler):
+    pass

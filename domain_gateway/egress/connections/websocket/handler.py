@@ -2,7 +2,7 @@ from typing import override
 
 from fastapi import APIRouter
 
-from domain_gateway.core.interfaces.handler import BaseHandler, MessageHandler
+from domain_gateway.core.interfaces.handler import Handler, MessageHandler
 from domain_gateway.egress.connections.websocket.routers.subscription import (
     subscription_router,
 )
@@ -10,7 +10,7 @@ from domain_gateway.models.topic.paths import TopicPath
 from domain_gateway.models.topic.payloads import TopicPayload
 
 
-class WebsocketHandler(BaseHandler, MessageHandler):
+class WebsocketHandler(Handler):
     def __init__(self):
         self._router = APIRouter()
         self._router.include_router(subscription_router)
@@ -30,4 +30,4 @@ class WebsocketHandler(BaseHandler, MessageHandler):
 
     @override
     def update(self, topic: TopicPath, payload: TopicPayload) -> None:
-        raise NotImplementedError("To be implemented.")
+        pass

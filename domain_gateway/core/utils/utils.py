@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 
-from domain_gateway.core.interfaces.handler import BaseHandler
+from domain_gateway.core.interfaces.handler import Handler
 
 
-def include_routers(root_router: APIRouter, handlers: list[BaseHandler]) -> None:
+def include_routers(root_router: APIRouter, handlers: list[Handler]) -> None:
     """
     Utility function to include multiple routers in a root router.
     """
