@@ -4,9 +4,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from domain_gateway.connections.externals.handler import ExternalConnectionsHandler
+from domain_gateway.connections.internals.handler import InternalConnectionsHandler
 
 external_connections = ExternalConnectionsHandler()
-internalconnections = ExternalConnectionsHandler()
+internalconnections = InternalConnectionsHandler()
 
 
 @asynccontextmanager

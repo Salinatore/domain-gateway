@@ -12,7 +12,7 @@ from domain_gateway.models.topic.paths import TopicPath
 from domain_gateway.models.topic.payloads import TopicPayload
 
 
-class ExternalConnectionsHandler(Handler):
+class InternalConnectionsHandler(Handler):
     def __init__(self):
         self._router = APIRouter()  # Empty router, as the ingress handler does not expose any HTTP/WS endpoint now but can in the future.
         self.connections: list[Handler] = [
