@@ -3,23 +3,24 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from domain_gateway.cache.base import cache
 from domain_gateway.connections.externals.handler import ExternalConnectionsHandler
 from domain_gateway.connections.internals.handler import InternalConnectionsHandler
 
-external_connections = ExternalConnectionsHandler()
-internalconnections = InternalConnectionsHandler()
+external_connections = ExternalConnectionsHandler(cache)
+internal_connections = InternalConnectionsHandler()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await asyncio.gather(
-        external_connections.start(internalconnections),
-        internalconnections.start(external_connections),
+        external_connections.start(internal_connections),
+        internal_connections.start(external_connections),
     )
     yield
     await asyncio.gather(
         external_connections.stop(),
-        internalconnections.stop(),
+        internal_connections.stop(),
     )
 
 
@@ -32,4 +33,4 @@ app = FastAPI(
 
 
 app.include_router(external_connections.router)
-app.include_router(internalconnections.router)
+app.include_router(internal_connections.router)
