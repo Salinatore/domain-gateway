@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException, status
 
-from domain_gateway.egress.connections.http.models.responses import (
+from domain_gateway.models.topic.payloads import Formation, Leader
+from domain_gateway.connections.externals.connections.http.models.responses import (
     FormationResponse,
     LeaderResponse,
 )
-from domain_gateway.models.topic.payloads import Formation, Leader
 
 computing_inputs_router = APIRouter(prefix="/computing/inputs", tags=["inputs"])
 

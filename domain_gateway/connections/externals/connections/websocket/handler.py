@@ -3,19 +3,17 @@ from typing import override
 from fastapi import APIRouter
 
 from domain_gateway.core.interfaces.handler import Handler, MessageHandler
-from domain_gateway.egress.connections.http.routers.computing import (
-    computing_inputs_router,
-)
-from domain_gateway.egress.connections.http.routers.robots import robots_router
 from domain_gateway.models.topic.paths import TopicPath
 from domain_gateway.models.topic.payloads import TopicPayload
+from domain_gateway.connections.externals.connections.websocket.routers.subscription import (
+    subscription_router,
+)
 
 
-class HTTPHandler(Handler):
+class WebsocketHandler(Handler):
     def __init__(self):
         self._router = APIRouter()
-        self._router.include_router(robots_router)
-        self._router.include_router(computing_inputs_router)
+        self._router.include_router(subscription_router)
 
     @property
     @override

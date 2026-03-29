@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status
 
-from domain_gateway.egress.connections.websocket.models.subscription import (
+from domain_gateway.connections.externals.connections.websocket.models.subscription import (
     SubscriptionCreate,
     SubscriptionCreateResponse,
     SubscriptionData,

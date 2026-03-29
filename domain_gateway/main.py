@@ -3,23 +3,23 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from domain_gateway.egress.handler import EgressHandler
-from domain_gateway.ingress.handler import IngressHandler
+from domain_gateway.connections.externals.handler import ExternalConnectionsHandler
+from domain_gateway.connections.internals.handler import ExternalConnectionsHandler
 
-egress = EgressHandler()
-ingress = IngressHandler()
+external_connections = ExternalConnectionsHandler()
+internalconnections = ExternalConnectionsHandler()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await asyncio.gather(
-        ingress.start(egress),
-        egress.start(ingress),
+        external_connections.start(internalconnections),
+        internalconnections.start(external_connections),
     )
     yield
     await asyncio.gather(
-        ingress.stop(),
-        egress.stop(),
+        external_connections.stop(),
+        internalconnections.stop(),
     )
 
 
@@ -31,5 +31,5 @@ app = FastAPI(
 )
 
 
-app.include_router(egress.router)
-app.include_router(ingress.router)
+app.include_router(external_connections.router)
+app.include_router(internalconnections.router)

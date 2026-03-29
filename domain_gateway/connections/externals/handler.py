@@ -3,21 +3,24 @@ from typing import override
 
 from fastapi import APIRouter
 
-from domain_gateway.core.interfaces.handler import (
-    Handler,
-    MessageHandler,
+from domain_gateway.connections.externals.connections.http.handler import HTTPHandler
+from domain_gateway.connections.externals.connections.websocket.handler import (
+    WebsocketHandler,
 )
-from domain_gateway.ingress.connections.mqtt.handler import MQTTHandler
+from domain_gateway.core.interfaces.handler import Handler, MessageHandler
+from domain_gateway.core.utils.utils import include_routers
 from domain_gateway.models.topic.paths import TopicPath
 from domain_gateway.models.topic.payloads import TopicPayload
 
 
-class IngressHandler(Handler):
+class ExternalConnectionsHandler(Handler):
     def __init__(self):
-        self._router = APIRouter()  # Empty router, as the ingress handler does not expose any HTTP/WS endpoint now but can in the future.
+        self._router = APIRouter()
         self.connections: list[Handler] = [
-            MQTTHandler(),
+            HTTPHandler(),
+            WebsocketHandler(),
         ]
+        include_routers(self._router, self.connections)
 
     @property
     @override

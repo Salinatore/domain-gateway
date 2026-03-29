@@ -1,17 +1,17 @@
 from fastapi import APIRouter, HTTPException, status
 
-from domain_gateway.egress.connections.http.models.responses import (
-    MovementResponse,
-    NeighborsResponse,
-    PositionResponse,
-    SensingResponse,
-)
 from domain_gateway.models.topic.payloads import (
     RobotID,
     RobotMovement,
     RobotNeighbors,
     RobotPosition,
     RobotSensing,
+)
+from domain_gateway.connections.externals.connections.http.models.responses import (
+    MovementResponse,
+    NeighborsResponse,
+    PositionResponse,
+    SensingResponse,
 )
 
 robots_router = APIRouter(prefix="/robots", tags=["robots"])
