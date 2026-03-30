@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 
-from domain_gateway.cache.base import CacheDep
+from domain_gateway.core.cache import CacheDep
 from domain_gateway.connections.externals.connections.http.models.responses import (
     MovementResponse,
     NeighborsResponse,

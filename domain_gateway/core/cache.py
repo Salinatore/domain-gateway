@@ -3,7 +3,6 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from domain_gateway.cache.backends.memory import MemoryCache
 from domain_gateway.models.topic.paths import TopicPath
 from domain_gateway.models.topic.payloads import TopicPayload
 
@@ -14,6 +13,17 @@ class Cache(ABC):
 
     @abstractmethod
     def set(self, topic: TopicPath, payload: TopicPayload) -> None: ...
+
+
+class MemoryCache(Cache):
+    def __init__(self):
+        self._store: dict[TopicPath, TopicPayload] = {}
+
+    def get(self, topic: TopicPath) -> TopicPayload | None:
+        return self._store.get(topic)
+
+    def set(self, topic: TopicPath, payload: TopicPayload) -> None:
+        self._store[topic] = payload
 
 
 def cache_factory() -> Cache:

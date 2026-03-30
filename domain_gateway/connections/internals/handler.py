@@ -4,7 +4,7 @@ from typing import override
 from fastapi import APIRouter
 
 from domain_gateway.connections.internals.connections.mqtt.handler import MQTTHandler
-from domain_gateway.core.interfaces.handler import (
+from domain_gateway.core.handler import (
     Handler,
     MessageHandler,
 )

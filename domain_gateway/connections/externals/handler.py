@@ -3,13 +3,13 @@ from typing import override
 
 from fastapi import APIRouter
 
-from domain_gateway.cache.base import Cache
+from domain_gateway.core.cache import Cache
 from domain_gateway.connections.externals.connections.http.handler import HTTPHandler
 from domain_gateway.connections.externals.connections.websocket.handler import (
     WebsocketHandler,
 )
-from domain_gateway.core.interfaces.handler import Handler, MessageHandler
-from domain_gateway.core.utils.utils import include_routers
+from domain_gateway.core.handler import Handler, MessageHandler
+from domain_gateway.utils import include_routers
 from domain_gateway.models.topic.paths import TopicPath
 from domain_gateway.models.topic.payloads import TopicPayload
 

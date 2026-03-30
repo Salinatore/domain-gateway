@@ -2,7 +2,7 @@ from typing import override
 
 from fastapi import APIRouter
 
-from domain_gateway.core.interfaces.handler import Handler, MessageHandler
+from domain_gateway.core.handler import Handler, MessageHandler
 from domain_gateway.models.topic.paths import TopicPath
 from domain_gateway.models.topic.payloads import TopicPayload
 from domain_gateway.connections.externals.connections.websocket.routers.subscription import (

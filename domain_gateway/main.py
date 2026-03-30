@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from domain_gateway.cache.base import cache
+from domain_gateway.core.cache import cache
 from domain_gateway.connections.externals.handler import ExternalConnectionsHandler
 from domain_gateway.connections.internals.handler import InternalConnectionsHandler
 
