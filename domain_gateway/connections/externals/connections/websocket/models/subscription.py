@@ -1,9 +1,11 @@
 from datetime import datetime
-from uuid import UUID, uuid4
+from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from domain_gateway.models.topic.paths import TopicPath
+
+type SubscriptionID = UUID
 
 # ── Request bodies ─────────────────────────────────────────────────────────────
 
@@ -20,13 +22,13 @@ class SubscriptionUpdate(SubscriptionCreate):
 
 
 class SubscriptionData(BaseModel):
-    id: UUID
+    id: SubscriptionID
     subscribed_to_topic: TopicPath
     created_at: datetime
 
 
 class SubscriptionCreateResponse(BaseModel):
-    id: UUID = Field(default_factory=uuid4)
+    id: SubscriptionID
     subscribed_to_topic: TopicPath
     created_at: datetime
 
