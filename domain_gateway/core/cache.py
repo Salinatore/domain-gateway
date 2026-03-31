@@ -15,10 +15,10 @@ class Cache(ABC):
         Subclasses should implement the get and _set methods.
         The super().__init__() must be called by subclasses.
         """
-        self.ready = False
+        self._ready = False
 
     def attach_bus(self, outbound_bus: Bus) -> None:
-        self.ready = True
+        self._ready = True
         outbound_bus.subscribe(self._handle_update)
 
     @abstractmethod
@@ -41,7 +41,7 @@ class Cache(ABC):
         self._set(topic, payload)
 
     def _check_ready(self) -> None:
-        if not self.ready:
+        if not self._ready:
             raise RuntimeError("Cache is not ready. Call attach_bus() first.")
 
 

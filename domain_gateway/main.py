@@ -8,6 +8,8 @@ from domain_gateway.connections.internals.handler import InternalConnectionsHand
 from domain_gateway.core.bus import inbound_bus, outbound_bus
 from domain_gateway.core.cache import cache
 
+cache.attach_bus(outbound_bus=outbound_bus)
+
 external_connections = ExternalConnectionsHandler(cache)
 internal_connections = InternalConnectionsHandler()
 

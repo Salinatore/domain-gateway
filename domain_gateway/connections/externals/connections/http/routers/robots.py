@@ -7,6 +7,7 @@ from domain_gateway.connections.externals.connections.http.models.responses impo
     SensingResponse,
 )
 from domain_gateway.core.bus import InboundBusDep
+from domain_gateway.core.cache import CacheDep
 from domain_gateway.models.topic.paths import POSITION_TOPIC_PATH
 from domain_gateway.models.topic.payloads import (
     RobotID,
@@ -14,21 +15,31 @@ from domain_gateway.models.topic.payloads import (
     RobotNeighbors,
     RobotPosition,
     RobotSensing,
+    TopicPayload,
 )
 
 robots_router = APIRouter(
     prefix="/robots",
     tags=["robots"],
-    responses={500: {"description": "Internal Server Error"}},
 )
 
+robots_get_router = APIRouter()
+robots_put_router = APIRouter()
+
+robots_router.include_router(robots_get_router)
 
 # ── Position ──────────────────────────────────────────────────────────────────
 
 
-@robots_router.get("/{robot_id}/position")
-async def read_robot_position(robot_id: RobotID) -> RobotPosition:
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
+@robots_router.get("/{robot_id}/position", response_model=RobotPosition)
+async def read_robot_position(robot_id: RobotID, cache: CacheDep) -> TopicPayload:
+    position = cache.get(POSITION_TOPIC_PATH.format(robot_id=robot_id))
+    if position is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Position for robot {robot_id} not found",
+        )
+    return position
 
 
 @robots_router.put("/{robot_id}/position")
