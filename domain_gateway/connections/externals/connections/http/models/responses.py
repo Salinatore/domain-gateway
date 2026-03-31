@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from domain_gateway.models.topic.paths import (
     FormationTopicPath,
@@ -19,11 +19,12 @@ from domain_gateway.models.topic.payloads import (
     RobotSensing,
 )
 
-# ── robots ───────────────────────────────────────────────────────────────────
-
 
 class BaseResponse(BaseModel):
-    forwarded_at: datetime
+    forwarded_at: datetime = Field(default_factory=datetime.now)
+
+
+# ── robots ───────────────────────────────────────────────────────────────────
 
 
 class PositionResponse(BaseResponse):

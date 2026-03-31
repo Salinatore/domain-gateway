@@ -13,6 +13,17 @@ def make_validator(pattern: re.Pattern):
     return validate
 
 
+# ── templates ────────────────────────────────────────────────────────────────
+
+POSITION_TOPIC_PATH = "/robots/{robot_id}/position"
+NEIGHBORS_TOPIC_PATH = "/robots/{robot_id}/neighbors"
+MOVEMENT_TOPIC_PATH = "/robots/{robot_id}/movement"
+SENSING_TOPIC_PATH = "/robots/{robot_id}/sensing"
+FORMATION_TOPIC_PATH = "/computing/inputs/formations"
+LEADER_TOPIC_PATH = "/computing/inputs/leader"
+
+# ── patterns ─────────────────────────────────────────────────────────────────
+
 TOPIC_PATTERN = re.compile(
     r"^/(robots/(\d+|\+)/(position|neighbors|movement|sensing)|computing/inputs/(formations|leader))$"
 )
@@ -23,6 +34,7 @@ SENSING_TOPIC_PATTERN = re.compile(r"^/robots/(\d+|\+)/sensing$")
 FORMATION_TOPIC_PATTERN = re.compile(r"^/computing/inputs/formations$")
 LEADER_TOPIC_PATTERN = re.compile(r"^/computing/inputs/leader$")
 
+# ── annotated types ───────────────────────────────────────────────────────────
 
 TopicPath = Annotated[str, AfterValidator(make_validator(TOPIC_PATTERN))]
 PositionTopicPath = Annotated[

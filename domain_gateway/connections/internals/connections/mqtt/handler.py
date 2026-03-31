@@ -5,53 +5,99 @@ from typing import override
 from aiomqtt import Client
 from pydantic import ValidationError
 
-from domain_gateway.core.handler import Handler, MessageHandler
+from domain_gateway.core.bus import Bus
+from domain_gateway.core.handler import Handler
 from domain_gateway.models.topic.mappings import resolve_payload_class
 from domain_gateway.models.topic.paths import TopicPath
 from domain_gateway.models.topic.payloads import TopicPayload
 
 logger = logging.getLogger(__name__)
 
+RECONNECT_DELAY: int = 2  # Seconds
+
 
 class MQTTHandler(Handler):
     def __init__(self):
-        self._task: asyncio.Task | None = None
+        self._listener_task: asyncio.Task | None = None
+        self._publisher_task: asyncio.Task | None = None
+        self._message_queue: asyncio.Queue[tuple[TopicPath, TopicPayload]] = (
+            asyncio.Queue[tuple[TopicPath, TopicPayload]]()
+        )
+
+        self._inbound_bus: Bus | None = None
+        self._outbound_bus: Bus | None = None
+
+        self._running: bool = False
 
     @override
-    async def start(self, message_handler: MessageHandler) -> None:
-        self.message_handler: MessageHandler = message_handler
-        self._task = asyncio.create_task(self._listen())
+    async def start(self, inbound_bus: Bus, outbound_bus: Bus) -> None:
+        inbound_bus.subscribe(
+            self.update
+        )  # Subscribe to the inbound bus to receive messages to publish to MQTT
+        self._outbound_bus = outbound_bus  # Store the outbound bus reference to publish received MQTT messages to it
+
+        self._running = True
+        self._listener_task = asyncio.create_task(self._listener())
+        self._publisher_task = asyncio.create_task(self._publisher())
 
     @override
     async def stop(self) -> None:
-        if self._task:
-            self._task.cancel()
-            try:
-                await self._task
-            except asyncio.CancelledError:
-                pass
+        self._running = False
+
+        tasks = []
+        if self._listener_task:
+            self._listener_task.cancel()
+            tasks.append(self._listener_task)
+        if self._publisher_task:
+            self._publisher_task.cancel()
+            tasks.append(self._publisher_task)
+
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
+
+        self._listener_task = None
+        self._publisher_task = None
 
     @override
-    def update(self, topic: TopicPath, payload: TopicPayload) -> None:
-        asyncio.create_task(self._publish(str(topic), payload.model_dump_json()))
+    async def update(self, topic: TopicPath, payload: TopicPayload) -> None:
+        if self._running:
+            await self._message_queue.put((topic, payload))
 
-    async def _listen(self) -> None:
-        async with Client("localhost") as client:
-            await client.subscribe("/#")
-            async for message in client.messages:
-                if isinstance(message.payload, bytes):
-                    self._dispatch(str(message.topic), message.payload.decode("utf-8"))
-                else:
-                    logger.error("Received non-string payload: %s", message.payload)
+    async def _publisher(self) -> None:
+        while self._running:
+            try:
+                async with Client("localhost") as client:
+                    while self._running:
+                        topic, payload = await self._message_queue.get()
+                        await client.publish(topic, payload=payload.model_dump_json())
+            except Exception as e:
+                logger.error("MQTT publisher error: %s", e)
+                await asyncio.sleep(RECONNECT_DELAY)
 
-    async def _publish(self, topic: str, payload: str) -> None:
-        async with Client("localhost") as client:
-            await client.publish(topic, payload=payload)
+    async def _listener(self) -> None:
+        while self._running:
+            try:
+                async with Client("localhost") as client:
+                    await client.subscribe("/#")
+                    async for message in client.messages:
+                        if isinstance(message.payload, bytes):
+                            await self._dispatch(
+                                str(message.topic), message.payload.decode("utf-8")
+                            )
+                        else:
+                            logger.error(
+                                "Received non-string payload: %s", message.payload
+                            )
+            except Exception as e:
+                logger.error("MQTT listener error: %s", e)
+                await asyncio.sleep(RECONNECT_DELAY)
 
-    def _dispatch(self, topic: str, message: str) -> None:
+    async def _dispatch(self, topic: str, message: str) -> None:
         try:
             topic_payload = self._parse_message(topic, message)
-            self.message_handler.update(topic, topic_payload)
+            if self._outbound_bus is None:
+                raise RuntimeError("Message bus is not initialized")
+            await self._outbound_bus.publish(topic, topic_payload)
         except (ValidationError, ValueError) as e:
             logger.error("Invalid payload for topic %s: %s", topic, e)
 

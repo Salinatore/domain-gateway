@@ -26,12 +26,8 @@ class MemoryCache(Cache):
         self._store[topic] = payload
 
 
-def cache_factory() -> Cache:
-    return MemoryCache()
-
-
 # singleton
-cache: Cache = cache_factory()
+cache: Cache = MemoryCache()
 
 
 def get_cache() -> Cache:

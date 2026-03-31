@@ -2,18 +2,14 @@ from abc import ABC, abstractmethod
 
 from fastapi import APIRouter
 
+from domain_gateway.core.bus import Bus
 from domain_gateway.models.topic.paths import TopicPath
 from domain_gateway.models.topic.payloads import TopicPayload
 
 
-class MessageHandler(ABC):
+class Handler(ABC):
     @abstractmethod
-    def update(self, topic: TopicPath, payload: TopicPayload) -> None: ...
-
-
-class ConnectionHandler(ABC):
-    @abstractmethod
-    async def start(self, message_handler: MessageHandler) -> None: ...
+    async def start(self, inbound_bus: Bus, outbound_bus: Bus) -> None: ...
 
     @abstractmethod
     async def stop(self) -> None: ...
@@ -26,6 +22,5 @@ class ConnectionHandler(ABC):
         """
         return None
 
-
-class Handler(MessageHandler, ConnectionHandler):
-    pass
+    @abstractmethod
+    async def update(self, topic: TopicPath, payload: TopicPayload) -> None: ...

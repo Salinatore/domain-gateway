@@ -3,9 +3,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from domain_gateway.core.cache import cache
 from domain_gateway.connections.externals.handler import ExternalConnectionsHandler
 from domain_gateway.connections.internals.handler import InternalConnectionsHandler
+from domain_gateway.core.bus import inbound_bus, outbound_bus
+from domain_gateway.core.cache import cache
 
 external_connections = ExternalConnectionsHandler(cache)
 internal_connections = InternalConnectionsHandler()
@@ -14,8 +15,8 @@ internal_connections = InternalConnectionsHandler()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await asyncio.gather(
-        external_connections.start(internal_connections),
-        internal_connections.start(external_connections),
+        external_connections.start(inbound_bus=inbound_bus, outbound_bus=outbound_bus),
+        internal_connections.start(inbound_bus=inbound_bus, outbound_bus=outbound_bus),
     )
     yield
     await asyncio.gather(
@@ -27,7 +28,10 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Domain Gateway API",
     version="0.1.0",
-    description="The Domain Gateway is responsible for routing messages between the internal components of the system and the external world that can not talk in MQTT. Here the HTTP endpoints are documented.",
+    description="""
+    The Domain Gateway is responsible for routing messages between the internal components of the system and the external world that can not talk in MQTT.
+    Here the HTTP endpoints are documented.
+    """,
     lifespan=lifespan,
 )
 

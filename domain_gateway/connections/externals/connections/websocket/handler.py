@@ -2,12 +2,12 @@ from typing import override
 
 from fastapi import APIRouter
 
-from domain_gateway.core.handler import Handler, MessageHandler
-from domain_gateway.models.topic.paths import TopicPath
-from domain_gateway.models.topic.payloads import TopicPayload
 from domain_gateway.connections.externals.connections.websocket.routers.subscription import (
     subscription_router,
 )
+from domain_gateway.core.handler import Bus, Handler
+from domain_gateway.models.topic.paths import TopicPath
+from domain_gateway.models.topic.payloads import TopicPayload
 
 
 class WebsocketHandler(Handler):
@@ -21,7 +21,7 @@ class WebsocketHandler(Handler):
         return self._router
 
     @override
-    async def start(self, message_handler: MessageHandler) -> None:
+    async def start(self, inbound_bus: Bus, outbound_bus: Bus) -> None:
         pass
 
     @override
@@ -29,5 +29,5 @@ class WebsocketHandler(Handler):
         pass
 
     @override
-    def update(self, topic: TopicPath, payload: TopicPayload) -> None:
+    async def update(self, topic: TopicPath, payload: TopicPayload) -> None:
         pass

@@ -4,10 +4,8 @@ from typing import override
 from fastapi import APIRouter
 
 from domain_gateway.connections.internals.connections.mqtt.handler import MQTTHandler
-from domain_gateway.core.handler import (
-    Handler,
-    MessageHandler,
-)
+from domain_gateway.core.bus import Bus
+from domain_gateway.core.handler import Handler
 from domain_gateway.models.topic.paths import TopicPath
 from domain_gateway.models.topic.payloads import TopicPayload
 
@@ -24,10 +22,12 @@ class InternalConnectionsHandler(Handler):
     def router(self) -> APIRouter:
         return self._router
 
-    @override
-    async def start(self, message_handler: MessageHandler) -> None:
+    async def start(self, inbound_bus: Bus, outbound_bus: Bus) -> None:
         await asyncio.gather(
-            *(connection.start(message_handler) for connection in self.connections)
+            *(
+                connection.start(inbound_bus, outbound_bus)
+                for connection in self.connections
+            )
         )
 
     @override
@@ -35,6 +35,7 @@ class InternalConnectionsHandler(Handler):
         await asyncio.gather(*(connection.stop() for connection in self.connections))
 
     @override
-    def update(self, topic: TopicPath, payload: TopicPayload) -> None:
-        for connection in self.connections:
-            connection.update(topic, payload)
+    async def update(self, topic: TopicPath, payload: TopicPayload) -> None:
+        asyncio.gather(
+            *(connection.update(topic, payload) for connection in self.connections)
+        )

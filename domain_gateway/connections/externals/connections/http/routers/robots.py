@@ -1,12 +1,13 @@
 from fastapi import APIRouter, HTTPException, status
 
-from domain_gateway.core.cache import CacheDep
 from domain_gateway.connections.externals.connections.http.models.responses import (
     MovementResponse,
     NeighborsResponse,
     PositionResponse,
     SensingResponse,
 )
+from domain_gateway.core.bus import InboundBusDep
+from domain_gateway.models.topic.paths import POSITION_TOPIC_PATH
 from domain_gateway.models.topic.payloads import (
     RobotID,
     RobotMovement,
@@ -22,15 +23,19 @@ robots_router = APIRouter(prefix="/robots", tags=["robots"])
 
 
 @robots_router.get("/{robot_id}/position")
-async def read_robot_position(robot_id: RobotID, cache: CacheDep) -> RobotPosition:
+async def read_robot_position(robot_id: RobotID) -> RobotPosition:
     raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
 
 
 @robots_router.put("/{robot_id}/position")
 async def update_robot_position(
-    robot_id: RobotID, body: RobotPosition
+    robot_id: RobotID, body: RobotPosition, inbound_bus: InboundBusDep
 ) -> PositionResponse:
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
+    await inbound_bus.publish(POSITION_TOPIC_PATH.format(robot_id=robot_id), body)
+    return PositionResponse(
+        forwarded_to_topic=POSITION_TOPIC_PATH.format(robot_id=robot_id),
+        forwarded_item=body,
+    )
 
 
 # ── Neighborhood ──────────────────────────────────────────────────────────────
