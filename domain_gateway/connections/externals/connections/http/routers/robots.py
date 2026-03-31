@@ -16,7 +16,11 @@ from domain_gateway.models.topic.payloads import (
     RobotSensing,
 )
 
-robots_router = APIRouter(prefix="/robots", tags=["robots"])
+robots_router = APIRouter(
+    prefix="/robots",
+    tags=["robots"],
+    responses={500: {"description": "Internal Server Error"}},
+)
 
 
 # ── Position ──────────────────────────────────────────────────────────────────
@@ -31,7 +35,13 @@ async def read_robot_position(robot_id: RobotID) -> RobotPosition:
 async def update_robot_position(
     robot_id: RobotID, body: RobotPosition, inbound_bus: InboundBusDep
 ) -> PositionResponse:
-    await inbound_bus.publish(POSITION_TOPIC_PATH.format(robot_id=robot_id), body)
+    try:
+        await inbound_bus.publish(POSITION_TOPIC_PATH.format(robot_id=robot_id), body)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to publish position update: {e}",
+        ) from e
     return PositionResponse(
         forwarded_to_topic=POSITION_TOPIC_PATH.format(robot_id=robot_id),
         forwarded_item=body,
