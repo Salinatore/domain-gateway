@@ -6,32 +6,43 @@ from domain_gateway.connections.externals.connections.websocket.models.subscript
     SubscriptionCreate,
     SubscriptionCreateResponse,
     SubscriptionData,
-    SubscriptionUpdate,
-    SubscriptionUpdateResponse,
+)
+from domain_gateway.connections.externals.connections.websocket.service import (
+    SubscriptionManagerDep,
 )
 
 subscription_router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
 
 
-@subscription_router.get("/{subscription_id}")
-async def read_subscription(subscription_id: UUID) -> SubscriptionData:
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
+@subscription_router.get(
+    "/{subscription_id}", responses={404: {"description": "Subscription not found"}}
+)
+async def read_subscription(
+    subscription_id: UUID, subscription_manager: SubscriptionManagerDep
+) -> SubscriptionData:
+    topic = subscription_manager.get_topic_from_subscription(subscription_id)
+    if topic is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Subscription not found"
+        )
+
+    return SubscriptionData(id=subscription_id, subscribed_to_topic=topic)
 
 
-@subscription_router.post("", status_code=status.HTTP_201_CREATED)
-async def create_subscription(body: SubscriptionCreate) -> SubscriptionCreateResponse:
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
+@subscription_router.post("")
+async def create_subscription(
+    body: SubscriptionCreate, subscription_manager: SubscriptionManagerDep
+) -> SubscriptionCreateResponse:
+    subscription_id = subscription_manager.create_subscription(body.topic_of_interest)
+    return SubscriptionCreateResponse(
+        id=subscription_id, subscribed_to_topic=body.topic_of_interest
+    )
 
 
 @subscription_router.delete(
     "/{subscription_id}", status_code=status.HTTP_204_NO_CONTENT
 )
-async def delete_subscription(subscription_id: UUID) -> None:
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
-
-
-@subscription_router.put("/{subscription_id}")
-async def update_subscription(
-    subscription_id: UUID, body: SubscriptionUpdate
-) -> SubscriptionUpdateResponse:
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
+async def delete_subscription(
+    subscription_id: UUID, subscription_manager: SubscriptionManagerDep
+) -> None:
+    subscription_manager.delete_subscription(subscription_id)

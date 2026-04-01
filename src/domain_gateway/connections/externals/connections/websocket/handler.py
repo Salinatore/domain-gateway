@@ -5,6 +5,9 @@ from fastapi import APIRouter
 from domain_gateway.connections.externals.connections.websocket.routers.subscription import (
     subscription_router,
 )
+from domain_gateway.connections.externals.connections.websocket.routers.ws import (
+    ws_router,
+)
 from domain_gateway.connections.externals.connections.websocket.service import (
     webscoket_service,
 )
@@ -17,6 +20,7 @@ class WebsocketHandler(Handler):
     def __init__(self):
         self._router = APIRouter()
         self._router.include_router(subscription_router)
+        self._router.include_router(ws_router)
 
     @property
     @override
