@@ -1,11 +1,20 @@
-from typing import Protocol
+import logging
+from typing import Annotated, Protocol
 from uuid import UUID, uuid4
 
-from fastapi import WebSocket
+from fastapi import Depends, WebSocket
 
+from domain_gateway.connections.externals.connections.websocket.models.ws import (
+    PublishMessage,
+    SubscriptionMessage,
+    SubscriptionUpdateMessage,
+    client_sent_message_adapter,
+)
 from domain_gateway.core.bus import Bus
 from domain_gateway.models.topic.paths import TopicPath
 from domain_gateway.models.topic.payloads import TopicPayload
+
+logger = logging.getLogger(__name__)
 
 
 class WebSocketManager(Protocol):
@@ -45,9 +54,21 @@ class WebSocketService:
         while True:
             try:
                 data = await websocket.receive_json()
-                # TODO
+                message = client_sent_message_adapter.validate_json(data)
+
+                match message:
+                    case SubscriptionMessage():
+                        if websocket not in self.websocket_subscription_dict:
+                            self.websocket_subscription_dict[websocket] = []
+                        self.websocket_subscription_dict[websocket].append(message.id)
+                    case PublishMessage():
+                        await self.inbound_bus.publish(message.topic, message.payload)
+                    case _:
+                        logger.warning(
+                            "Received unknown message type from websocket: %s", data
+                        )
             except Exception as e:
-                print(f"Error receiving data from websocket: {e}")
+                logging.error("Error while receiving data from websocket: %s", e)
                 break
 
     def create_subscription(self, topic: TopicPath) -> UUID:
@@ -76,6 +97,44 @@ class WebSocketService:
     async def _handle_incoming_update(
         self, topic: TopicPath, payload: TopicPayload
     ) -> None:
-        # This method will be called by the outbound bus when a new update is published.
-        # It should send the update to all connected websockets that are subscribed to the topic.
-        pass
+        if topic not in self.topic_subscriptions_dict:
+            return
+
+        for subscription_ids in self.topic_subscriptions_dict[topic]:
+            for (
+                websocket,
+                ws_subscription_ids,
+            ) in self.websocket_subscription_dict.items():
+                if subscription_ids in ws_subscription_ids:
+                    await websocket.send_json(
+                        SubscriptionUpdateMessage(
+                            subscription_id=subscription_ids,
+                            topic=topic,
+                            payload=payload,
+                        )
+                    )
+
+
+# singleton
+webscoket_service = WebSocketService()
+
+
+def get_websocket_manager() -> WebSocketManager:
+    return webscoket_service
+
+
+def get_subscription_manager() -> SubscriptionManager:
+    return webscoket_service
+
+
+def get_bus_aware() -> BusAware:
+    return webscoket_service
+
+
+WebSocketManagerDep = Annotated[WebSocketManager, Depends(get_websocket_manager)]
+
+SubscriptionManagerDep = Annotated[
+    SubscriptionManager, Depends(get_subscription_manager)
+]
+
+BusAwareDep = Annotated[BusAware, Depends(get_bus_aware)]
