@@ -35,19 +35,16 @@ class BusAware(Protocol):
 
 class WebSocketService:
     def __init__(self) -> None:
-        self._ready: bool = False
-
         self._inbound_bus: Bus | None = None
 
-        self.topic_subscriptions_dict: dict[TopicPath, list[UUID]] = {}
-        self.websocket_subscription_dict: dict[WebSocket, list[UUID]] = {}
+        self._topic_subscriptions_dict: dict[TopicPath, list[UUID]] = {}
+        self._websocket_subscription_dict: dict[WebSocket, list[UUID]] = {}
 
     def set_buses(self, inbound: Bus, outbound: Bus) -> None:
-        self.inbound_bus = inbound  # Store the inbound bus reference to be able to publish messages to it when needed
+        self._inbound_bus = inbound  # Store the inbound bus reference to be able to publish messages to it when needed
         outbound.subscribe(
             self._handle_incoming_update
         )  # Subscribe to the inbound bus to receive messages to send to clients
-        self._ready = True
 
     async def add(self, websocket: WebSocket) -> None:
         await websocket.accept()
@@ -58,11 +55,17 @@ class WebSocketService:
 
                 match message:
                     case SubscriptionMessage():
-                        if websocket not in self.websocket_subscription_dict:
-                            self.websocket_subscription_dict[websocket] = []
-                        self.websocket_subscription_dict[websocket].append(message.id)
+                        if websocket not in self._websocket_subscription_dict:
+                            self._websocket_subscription_dict[websocket] = []
+                        self._websocket_subscription_dict[websocket].append(message.id)
                     case PublishMessage():
-                        await self.inbound_bus.publish(message.topic, message.payload)
+                        if not self._inbound_bus:
+                            logger.warning(
+                                "Received publish message before service is ready: %s",
+                                data,
+                            )
+                            continue
+                        await self._inbound_bus.publish(message.topic, message.payload)
                     case _:
                         logger.warning(
                             "Received unknown message type from websocket: %s", data
@@ -74,22 +77,22 @@ class WebSocketService:
     def create_subscription(self, topic: TopicPath) -> UUID:
         subscription_id = uuid4()
 
-        if topic not in self.topic_subscriptions_dict:
-            self.topic_subscriptions_dict[topic] = []
-        self.topic_subscriptions_dict[topic].append(subscription_id)
+        if topic not in self._topic_subscriptions_dict:
+            self._topic_subscriptions_dict[topic] = []
+        self._topic_subscriptions_dict[topic].append(subscription_id)
 
         return subscription_id
 
     def delete_subscription(self, subscription_id: UUID) -> None:
-        for topic, subscription_ids in self.topic_subscriptions_dict.items():
+        for topic, subscription_ids in self._topic_subscriptions_dict.items():
             if subscription_id in subscription_ids:
                 subscription_ids.remove(subscription_id)
                 if not subscription_ids:
-                    del self.topic_subscriptions_dict[topic]
+                    del self._topic_subscriptions_dict[topic]
                 break
 
     def get_topic_from_subscription(self, subscription_id: UUID) -> TopicPath | None:
-        for topic, subscription_ids in self.topic_subscriptions_dict.items():
+        for topic, subscription_ids in self._topic_subscriptions_dict.items():
             if subscription_id in subscription_ids:
                 return topic
         return None
@@ -97,14 +100,14 @@ class WebSocketService:
     async def _handle_incoming_update(
         self, topic: TopicPath, payload: TopicPayload
     ) -> None:
-        if topic not in self.topic_subscriptions_dict:
+        if topic not in self._topic_subscriptions_dict:
             return
 
-        for subscription_ids in self.topic_subscriptions_dict[topic]:
+        for subscription_ids in self._topic_subscriptions_dict[topic]:
             for (
                 websocket,
                 ws_subscription_ids,
-            ) in self.websocket_subscription_dict.items():
+            ) in self._websocket_subscription_dict.items():
                 if subscription_ids in ws_subscription_ids:
                     await websocket.send_json(
                         SubscriptionUpdateMessage(
