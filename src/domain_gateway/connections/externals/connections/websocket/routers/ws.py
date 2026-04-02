@@ -7,7 +7,7 @@ from domain_gateway.connections.externals.connections.websocket.service import (
 ws_router = APIRouter(prefix="/ws", tags=["websocket"])
 
 
-@ws_router.websocket("/")
+@ws_router.websocket("")
 async def websocket_endpoint(
     websocket: WebSocket, websocket_manager: WebSocketManagerDep
 ):
