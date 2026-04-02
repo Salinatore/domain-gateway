@@ -17,18 +17,8 @@ entrypoint = "domain_gateway.main:app"
 requires = ["uv_build>=0.11.2,<0.12"]
 build-backend = "uv_build"
 
-[tool.pytest.ini_options]
-pythonpath = ["src"]
-
-[tool.anyio]
-mode = ["async_client"]
-
 [dependency-groups]
 dev = [
-    "anyio>=4.12.1",
-    "asgi-lifespan>=2.1.0",
     "httpx>=0.28.1",
-    "httpx-ws>=0.9.0",
     "pytest>=9.0.2",
-    "pytest-asyncio>=1.3.0",
 ]
