@@ -4,7 +4,7 @@ import pytest
 from asgi_lifespan import LifespanManager
 from httpx import ASGITransport, AsyncClient
 
-from tests.moks import MockMQTTHandler
+from tests.mocks import MockMQTTHandler
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
