@@ -21,7 +21,7 @@ build-backend = "uv_build"
 pythonpath = ["src"]
 
 [tool.anyio]
-mode = ["auto"]
+mode = ["async_client"]
 
 [dependency-groups]
 dev = [
@@ -30,4 +30,5 @@ dev = [
     "httpx>=0.28.1",
     "httpx-ws>=0.9.0",
     "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
 ]
