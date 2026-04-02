@@ -6,9 +6,6 @@ from httpx import ASGITransport, AsyncClient
 
 from tests.moks import MockMQTTHandler
 
-# ── Mock MQTT ─────────────────────────────────────────────────────────────────
-
-
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
 
