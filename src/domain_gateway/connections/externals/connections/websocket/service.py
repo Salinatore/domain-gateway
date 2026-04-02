@@ -3,6 +3,8 @@ from typing import Annotated, Protocol
 from uuid import UUID, uuid4
 
 from fastapi import Depends, WebSocket
+from pydantic import ValidationError
+from starlette import status
 
 from domain_gateway.connections.externals.connections.websocket.models.ws import (
     PublishMessage,
@@ -51,13 +53,18 @@ class WebSocketService:
         while True:
             try:
                 data = await websocket.receive_json()
+                logger.error("Received data from websocket: %s", data)
                 message = client_sent_message_adapter.validate_python(data)
 
                 match message:
                     case SubscriptionMessage():
-                        if websocket not in self._websocket_subscription_dict:
-                            self._websocket_subscription_dict[websocket] = []
-                        self._websocket_subscription_dict[websocket].append(message.id)
+                        for _, id_list in self._topic_subscriptions_dict.items():
+                            if message.id in id_list:
+                                if websocket not in self._websocket_subscription_dict:
+                                    self._websocket_subscription_dict[websocket] = []
+                                self._websocket_subscription_dict[websocket].append(
+                                    message.id
+                                )
                     case PublishMessage():
                         if not self._inbound_bus:
                             logger.warning(
@@ -66,11 +73,14 @@ class WebSocketService:
                             )
                             continue
                         await self._inbound_bus.publish(message.topic, message.payload)
-                    case _:
-                        logger.warning(
-                            "Received unknown message type from websocket: %s", data
-                        )
+            except ValidationError as e:
+                await websocket.close(code=status.WS_1003_UNSUPPORTED_DATA)
+                logger.error("Invalid message received from websocket: %s", e)
+                break
             except Exception as e:
+                await websocket.close(
+                    code=status.WS_1011_INTERNAL_ERROR,
+                )
                 logging.error("Error while receiving data from websocket: %s", e)
                 break
 
@@ -103,18 +113,18 @@ class WebSocketService:
         if topic not in self._topic_subscriptions_dict:
             return
 
-        for subscription_ids in self._topic_subscriptions_dict[topic]:
+        for subscription_id in self._topic_subscriptions_dict[topic]:
             for (
                 websocket,
                 ws_subscription_ids,
             ) in self._websocket_subscription_dict.items():
-                if subscription_ids in ws_subscription_ids:
-                    await websocket.send_json(
+                if subscription_id in ws_subscription_ids:
+                    await websocket.send_text(
                         SubscriptionUpdateMessage(
-                            subscription_id=subscription_ids,
+                            subscription_id=subscription_id,
                             topic=topic,
                             payload=payload,
-                        )
+                        ).model_dump_json()
                     )
 
 
