@@ -20,9 +20,7 @@ class MQTTHandler(Handler):
     def __init__(self):
         self._listener_task: asyncio.Task | None = None
         self._publisher_task: asyncio.Task | None = None
-        self._message_queue: asyncio.Queue[tuple[TopicPath, TopicPayload]] = (
-            asyncio.Queue[tuple[TopicPath, TopicPayload]]()
-        )
+        self._message_queue: asyncio.Queue[tuple[TopicPath, TopicPayload]] | None = None
 
         self._inbound_bus: Bus | None = None
         self._outbound_bus: Bus | None = None
@@ -31,12 +29,11 @@ class MQTTHandler(Handler):
 
     @override
     async def start(self, inbound_bus: Bus, outbound_bus: Bus) -> None:
-        inbound_bus.subscribe(
-            self.update
-        )  # Subscribe to the inbound bus to receive messages to publish to MQTT
-        self._outbound_bus = outbound_bus  # Store the outbound bus reference to publish received MQTT messages to it
-
         self._running = True
+        self._message_queue = asyncio.Queue()
+        inbound_bus.subscribe(self.update)
+        self._outbound_bus = outbound_bus
+
         self._listener_task = asyncio.create_task(self._listener())
         self._publisher_task = asyncio.create_task(self._publisher())
 
@@ -57,14 +54,15 @@ class MQTTHandler(Handler):
 
         self._listener_task = None
         self._publisher_task = None
+        self._message_queue = None
 
     @override
     async def update(self, topic: TopicPath, payload: TopicPayload) -> None:
-        if self._running:
+        if self._running and self._message_queue is not None:
             await self._message_queue.put((topic, payload))
 
     async def _publisher(self) -> None:
-        while self._running:
+        while self._running and self._message_queue is not None:
             try:
                 async with Client("localhost") as client:
                     while self._running:
