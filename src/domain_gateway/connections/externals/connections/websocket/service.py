@@ -51,7 +51,7 @@ class WebSocketService:
         while True:
             try:
                 data = await websocket.receive_json()
-                message = client_sent_message_adapter.validate_json(data)
+                message = client_sent_message_adapter.validate_python(data)
 
                 match message:
                     case SubscriptionMessage():
