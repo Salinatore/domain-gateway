@@ -20,9 +20,6 @@ from domain_gateway.models.topic.payloads import TopicPayload
 
 logger = logging.getLogger(__name__)
 
-COAP_BIND_HOST = "localhost"
-COAP_BIND_PORT = 5683
-
 
 class CoAPHandler(Handler):
     def __init__(self, cache: Cache) -> None:
@@ -34,18 +31,10 @@ class CoAPHandler(Handler):
     @override
     async def start(self, inbound_bus: Bus, outbound_bus: Bus) -> None:
         self._inbound_bus = inbound_bus
-        self._server_task = asyncio.create_task(self._serve(), name="coap-server")
+        await self._serve()
 
     @override
     async def stop(self) -> None:
-        if self._server_task:
-            self._server_task.cancel()
-            try:
-                await self._server_task
-            except asyncio.CancelledError:
-                pass
-            self._server_task = None
-
         if self._context:
             await self._context.shutdown()
             self._context = None
@@ -72,13 +61,5 @@ class CoAPHandler(Handler):
             LeaderResource(self._cache, self._inbound_bus),
         )
 
-        self._context = await aiocoap.Context.create_server_context(
-            site, bind=(COAP_BIND_HOST, COAP_BIND_PORT)
-        )
-        logger.info("CoAP server listening on coap://0.0.0.0:%d", COAP_BIND_PORT)
-
-        try:
-            await asyncio.Future()
-        finally:
-            await self._context.shutdown()
-            self._context = None
+        self._context = await aiocoap.Context.create_server_context(site)
+        logger.info("CoAP server started")
