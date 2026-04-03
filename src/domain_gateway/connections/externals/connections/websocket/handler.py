@@ -12,8 +12,6 @@ from domain_gateway.connections.externals.connections.websocket.service import (
     webscoket_service,
 )
 from domain_gateway.core.handler import Bus, Handler
-from domain_gateway.models.topic.paths import TopicPath
-from domain_gateway.models.topic.payloads import TopicPayload
 
 
 class WebsocketHandler(Handler):
@@ -33,8 +31,4 @@ class WebsocketHandler(Handler):
 
     @override
     async def stop(self) -> None:
-        pass
-
-    @override
-    async def update(self, topic: TopicPath, payload: TopicPayload) -> None:
         pass

@@ -32,7 +32,7 @@ class MQTTHandler(Handler):
     async def start(self, inbound_bus: Bus, outbound_bus: Bus) -> None:
         self._running = True
         self._message_queue = asyncio.Queue()
-        inbound_bus.subscribe(self.update)
+        inbound_bus.subscribe(self._update)
         self._outbound_bus = outbound_bus
 
         self._listener_task = asyncio.create_task(
@@ -61,8 +61,7 @@ class MQTTHandler(Handler):
         self._publisher_task = None
         self._message_queue = None
 
-    @override
-    async def update(self, topic: TopicPath, payload: TopicPayload) -> None:
+    async def _update(self, topic: TopicPath, payload: TopicPayload) -> None:
         if self._running and self._message_queue is not None:
             await self._message_queue.put((topic, payload))
 

@@ -10,8 +10,6 @@ from domain_gateway.connections.externals.connections.http.routers.robots import
 )
 from domain_gateway.core.bus import Bus
 from domain_gateway.core.handler import Handler
-from domain_gateway.models.topic.paths import TopicPath
-from domain_gateway.models.topic.payloads import TopicPayload
 
 
 class HTTPHandler(Handler):
@@ -31,8 +29,4 @@ class HTTPHandler(Handler):
 
     @override
     async def stop(self) -> None:
-        pass
-
-    @override
-    async def update(self, topic: TopicPath, payload: TopicPayload) -> None:
         pass

@@ -15,8 +15,6 @@ from domain_gateway.connections.externals.connections.coap.resources.robots impo
 from domain_gateway.core.bus import Bus
 from domain_gateway.core.cache import Cache
 from domain_gateway.core.handler import Handler
-from domain_gateway.models.topic.paths import TopicPath
-from domain_gateway.models.topic.payloads import TopicPayload
 
 logger = logging.getLogger(__name__)
 
@@ -38,10 +36,6 @@ class CoAPHandler(Handler):
         if self._context:
             await self._context.shutdown()
             self._context = None
-
-    @override
-    async def update(self, topic: TopicPath, payload: TopicPayload) -> None:
-        pass  # observer notify hook
 
     async def _serve(self) -> None:
         if self._inbound_bus is None:
