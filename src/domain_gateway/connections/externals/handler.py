@@ -4,7 +4,6 @@ from typing import override
 from fastapi import APIRouter
 
 from domain_gateway.core.bus import Bus
-from domain_gateway.core.cache import Cache
 from domain_gateway.core.handler import Handler
 from domain_gateway.models.topic.paths import TopicPath
 from domain_gateway.models.topic.payloads import TopicPayload
@@ -14,10 +13,8 @@ from domain_gateway.utils import include_routers
 class ExternalConnectionsHandler(Handler):
     def __init__(
         self,
-        cache: Cache,
         connections: list[Handler] | None = None,
     ):
-        self._cache = cache
         self._router = APIRouter()
         self.connections: list[Handler] = connections or []
         include_routers(self._router, self.connections)
