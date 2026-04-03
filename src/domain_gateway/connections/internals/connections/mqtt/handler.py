@@ -10,6 +10,7 @@ from domain_gateway.core.handler import Handler
 from domain_gateway.models.topic.mappings import resolve_payload_class
 from domain_gateway.models.topic.paths import TopicPath
 from domain_gateway.models.topic.payloads import TopicPayload
+from domain_gateway.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +69,7 @@ class MQTTHandler(Handler):
     async def _publisher(self) -> None:
         while self._running and self._message_queue is not None:
             try:
-                async with Client("localhost") as client:
+                async with Client(settings.mqtt_broker_url) as client:
                     while self._running:
                         topic, payload = await self._message_queue.get()
                         await client.publish(topic, payload=payload.model_dump_json())
@@ -79,7 +80,7 @@ class MQTTHandler(Handler):
     async def _listener(self) -> None:
         while self._running:
             try:
-                async with Client("localhost") as client:
+                async with Client(settings.mqtt_broker_url) as client:
                     await client.subscribe("/#")
                     async for message in client.messages:
                         if isinstance(message.payload, bytes):
