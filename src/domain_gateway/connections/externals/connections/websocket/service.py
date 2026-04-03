@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import Annotated, Protocol
 from uuid import UUID, uuid4
@@ -103,7 +104,7 @@ class WebSocketService:
         self._inbound_bus: Bus | None = None
 
         self._topic_subscriptions_dict: dict[TopicPath, list[UUID]] = {}
-        self._websocket_subscription_dict: dict[WebSocket, list[UUID]] = {}
+        self._subscription_websocket_dict: dict[UUID, WebSocket] = {}
 
     def set_buses(self, inbound: Bus, outbound: Bus) -> None:
         self._inbound_bus = inbound  # Store the inbound bus reference to be able to publish messages to it when needed
@@ -123,10 +124,8 @@ class WebSocketService:
                     case SubscriptionMessage():
                         for _, id_list in self._topic_subscriptions_dict.items():
                             if message.id in id_list:
-                                if websocket not in self._websocket_subscription_dict:
-                                    self._websocket_subscription_dict[websocket] = []
-                                self._websocket_subscription_dict[websocket].append(
-                                    message.id
+                                self._subscription_websocket_dict[message.id] = (
+                                    websocket
                                 )
                     case PublishMessage():
                         if not self._inbound_bus:
@@ -141,9 +140,7 @@ class WebSocketService:
                 logger.error("Invalid message received from websocket: %s", e)
                 break
             except Exception as e:
-                await websocket.close(
-                    code=status.WS_1011_INTERNAL_ERROR,
-                )
+                await websocket.close(code=status.WS_1011_INTERNAL_ERROR)
                 logging.error("Error while receiving data from websocket: %s", e)
                 break
 
@@ -157,6 +154,7 @@ class WebSocketService:
         return subscription_id
 
     def delete_subscription(self, subscription_id: UUID) -> None:
+        self._subscription_websocket_dict.pop(subscription_id, None)
         for topic, subscription_ids in self._topic_subscriptions_dict.items():
             if subscription_id in subscription_ids:
                 subscription_ids.remove(subscription_id)
@@ -176,19 +174,20 @@ class WebSocketService:
         if topic not in self._topic_subscriptions_dict:
             return
 
-        for subscription_id in self._topic_subscriptions_dict[topic]:
-            for (
-                websocket,
-                ws_subscription_ids,
-            ) in self._websocket_subscription_dict.items():
-                if subscription_id in ws_subscription_ids:
-                    await websocket.send_text(
-                        SubscriptionUpdateMessage(
-                            subscription_id=subscription_id,
-                            topic=topic,
-                            payload=payload,
-                        ).model_dump_json()
-                    )
+        await asyncio.gather(
+            *[
+                websocket.send_text(
+                    SubscriptionUpdateMessage(
+                        subscription_id=subscription_id,
+                        topic=topic,
+                        payload=payload,
+                    ).model_dump_json()
+                )
+                for subscription_id in self._topic_subscriptions_dict[topic]
+                if (websocket := self._subscription_websocket_dict.get(subscription_id))
+            ],
+            return_exceptions=True,
+        )
 
 
 # singleton
