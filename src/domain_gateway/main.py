@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -13,6 +14,8 @@ from domain_gateway.connections.internals.connections.mqtt.handler import MQTTHa
 from domain_gateway.connections.internals.handler import InternalConnectionsHandler
 from domain_gateway.core.bus import inbound_bus, outbound_bus
 from domain_gateway.core.cache import cache
+
+logging.basicConfig(level=logging.INFO)
 
 cache.attach_bus(outbound_bus=outbound_bus)
 
@@ -44,7 +47,6 @@ app = FastAPI(
     """,
     lifespan=lifespan,
 )
-
 
 app.include_router(external_connections.router)
 app.include_router(internal_connections.router)
