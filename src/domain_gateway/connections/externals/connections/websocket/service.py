@@ -129,19 +129,19 @@ class WebSocketService:
 
 
 # singleton
-webscoket_service = WebSocketService()
+websocket_service = WebSocketService()
 
 
 def get_websocket_manager() -> WebSocketManager:
-    return webscoket_service
+    return websocket_service
 
 
 def get_subscription_manager() -> SubscriptionManager:
-    return webscoket_service
+    return websocket_service
 
 
 def get_bus_aware() -> BusAware:
-    return webscoket_service
+    return websocket_service
 
 
 WebSocketManagerDep = Annotated[WebSocketManager, Depends(get_websocket_manager)]

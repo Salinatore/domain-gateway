@@ -14,12 +14,12 @@ from domain_gateway.connections.externals.connections.coap.resources.robots impo
 )
 from domain_gateway.core.bus import Bus
 from domain_gateway.core.cache import Cache
-from domain_gateway.core.handler import Handler
+from domain_gateway.core.connection import Connection
 
 logger = logging.getLogger(__name__)
 
 
-class CoAPHandler(Handler):
+class CoAPConnection(Connection):
     def __init__(self, cache: Cache) -> None:
         self._cache = cache
         self._inbound_bus: Bus | None = None

@@ -4,13 +4,13 @@ from typing import override
 from fastapi import APIRouter
 
 from domain_gateway.core.bus import Bus
-from domain_gateway.core.handler import Handler
+from domain_gateway.core.connection import Connection
 
 
-class InternalConnectionsHandler(Handler):
-    def __init__(self, connections: list[Handler] | None = None):
+class InternalConnections(Connection):
+    def __init__(self, connections: list[Connection] | None = None):
         self._router = APIRouter()  # Empty router, as the ingress handler does not expose any HTTP/WS endpoint now but can in the future.
-        self.connections: list[Handler] = connections or []
+        self.connections: list[Connection] = connections or []
 
     @property
     @override

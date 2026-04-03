@@ -5,7 +5,7 @@ from fastapi import APIRouter
 from domain_gateway.core.bus import Bus
 
 
-class Handler(ABC):
+class Connection(ABC):
     @abstractmethod
     async def start(self, inbound_bus: Bus, outbound_bus: Bus) -> None: ...
 
@@ -15,7 +15,7 @@ class Handler(ABC):
     @property
     def router(self) -> APIRouter | None:
         """
-        Handlers that expose HTTP/WS routes override this.
+        Connections that expose HTTP/WS routes override this.
         Protocols like CoAP or MQTT return None (default).
         """
         return None

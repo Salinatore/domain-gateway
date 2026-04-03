@@ -4,14 +4,20 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from domain_gateway.connections.externals.connections.coap.handler import CoAPHandler
-from domain_gateway.connections.externals.connections.http.handler import HTTPHandler
-from domain_gateway.connections.externals.connections.websocket.handler import (
-    WebsocketHandler,
+from domain_gateway.connections.externals.connection import ExternalConnections
+from domain_gateway.connections.externals.connections.coap.connection import (
+    CoAPConnection,
 )
-from domain_gateway.connections.externals.handler import ExternalConnectionsHandler
-from domain_gateway.connections.internals.connections.mqtt.handler import MQTTHandler
-from domain_gateway.connections.internals.handler import InternalConnectionsHandler
+from domain_gateway.connections.externals.connections.http.connection import (
+    HTTPConnection,
+)
+from domain_gateway.connections.externals.connections.websocket.connection import (
+    WebsocketConnection,
+)
+from domain_gateway.connections.internals.connection import InternalConnections
+from domain_gateway.connections.internals.connections.mqtt.connection import (
+    MQTTConnection,
+)
 from domain_gateway.core.bus import inbound_bus, outbound_bus
 from domain_gateway.core.cache import cache
 
@@ -19,10 +25,10 @@ logging.basicConfig(level=logging.INFO)
 
 cache.attach_bus(outbound_bus=outbound_bus)
 
-external_connections = ExternalConnectionsHandler(
-    connections=[HTTPHandler(), WebsocketHandler(), CoAPHandler(cache=cache)]
+external_connections = ExternalConnections(
+    connections=[HTTPConnection(), WebsocketConnection(), CoAPConnection(cache=cache)]
 )
-internal_connections = InternalConnectionsHandler(connections=[MQTTHandler()])
+internal_connections = InternalConnections(connections=[MQTTConnection()])
 
 
 @asynccontextmanager

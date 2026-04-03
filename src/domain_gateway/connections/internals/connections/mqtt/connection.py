@@ -6,7 +6,7 @@ from aiomqtt import Client
 from pydantic import ValidationError
 
 from domain_gateway.core.bus import Bus
-from domain_gateway.core.handler import Handler
+from domain_gateway.core.connection import Connection
 from domain_gateway.models.topic.mappings import resolve_payload_class
 from domain_gateway.models.topic.paths import TopicPath
 from domain_gateway.models.topic.payloads import TopicPayload
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 RECONNECT_DELAY: int = 2  # Seconds
 
 
-class MQTTHandler(Handler):
+class MQTTConnection(Connection):
     def __init__(self):
         self._listener_task: asyncio.Task | None = None
         self._publisher_task: asyncio.Task | None = None

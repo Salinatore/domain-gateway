@@ -4,17 +4,17 @@ from typing import override
 from fastapi import APIRouter
 
 from domain_gateway.core.bus import Bus
-from domain_gateway.core.handler import Handler
+from domain_gateway.core.connection import Connection
 from domain_gateway.utils import include_routers
 
 
-class ExternalConnectionsHandler(Handler):
+class ExternalConnections(Connection):
     def __init__(
         self,
-        connections: list[Handler] | None = None,
+        connections: list[Connection] | None = None,
     ):
         self._router = APIRouter()
-        self.connections: list[Handler] = connections or []
+        self.connections: list[Connection] = connections or []
         include_routers(self._router, self.connections)
 
     @property

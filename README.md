@@ -64,17 +64,17 @@ docker run -e MQTT_BROKER_URL=localhost -p 8000:8000 domain-gateway
 
 ## Adding a New Protocol
 
-The architecture is built around a single `Handler` abstract class. Adding a new protocol means implementing the interface and registering the handler.
+The architecture is built around a single `Connection` abstract class. Adding a new protocol means implementing the interface and registering the handler.
 
 ```python
-external_connections = ExternalConnectionsHandler(
-    connections=[HTTPHandler(), WebsocketHandler(), CoAPHandler(cache=cache), NewProtocol()]
+external_connections = ExternalConnections(
+    connections=[HTTPConnection(), WebsocketConnection(), CoAPConnection(cache=cache), NewConnection()]
 )
 ```
 
-The bus wiring, lifespan management, and router inclusion are all handled automatically by `ExternalConnectionsHandler` (or `InternalConnectionsHandler` for internal protocols).
+The bus wiring, lifespan management, and router inclusion are all handled automatically by `ExternalConnections` (or `InternalConnections` for internal protocols).
 
-> The `Handler` abstraction keeps protocol concerns fully isolated from each other and from the core routing logic. Each handler only knows about the bus interface, so adding, removing, or swapping a protocol should have no impact on the rest of the system.
+> The `Connection` abstraction keeps protocol concerns fully isolated from each other and from the core routing logic. Each connection only knows about the bus interface, so adding, removing, or swapping a protocol should have no impact on the rest of the system.
 
 ## Development
 

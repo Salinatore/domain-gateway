@@ -9,10 +9,10 @@ from domain_gateway.connections.externals.connections.http.routers.robots import
     robots_router,
 )
 from domain_gateway.core.bus import Bus
-from domain_gateway.core.handler import Handler
+from domain_gateway.core.connection import Connection
 
 
-class HTTPHandler(Handler):
+class HTTPConnection(Connection):
     def __init__(self):
         self._router = APIRouter()
         self._router.include_router(robots_router)

@@ -1,9 +1,9 @@
-from domain_gateway.core.handler import Handler
+from domain_gateway.core.connection import Connection
 from domain_gateway.models.topic.paths import TopicPath
 from domain_gateway.models.topic.payloads import TopicPayload
 
 
-class MockMQTTHandler(Handler):
+class MockMQTTConnection(Connection):
     """
     Bypasses real MQTT. On start(), subscribes to inbound bus and
     echoes every message directly onto the outbound bus.
