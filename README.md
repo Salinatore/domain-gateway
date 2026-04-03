@@ -75,10 +75,3 @@ external_connections = ExternalConnections(
 The bus wiring, lifespan management, and router inclusion are all handled automatically by `ExternalConnections` (or `InternalConnections` for internal protocols).
 
 > The `Connection` abstraction keeps protocol concerns fully isolated from each other and from the core routing logic. Each connection only knows about the bus interface, so adding, removing, or swapping a protocol should have no impact on the rest of the system.
-
-## Development
-
-```bash
-uv sync
-uv run pytest tests/
-```
