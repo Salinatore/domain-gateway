@@ -55,7 +55,8 @@ class CoAPHandler(Handler):
         pass  # observer notify hook
 
     async def _serve(self) -> None:
-        assert self._inbound_bus is not None, "start() must be called before _serve()"
+        if self._inbound_bus is None:
+            raise RuntimeError("start() must be called before _serve()")
 
         site = resource.Site()
         site.add_resource(
