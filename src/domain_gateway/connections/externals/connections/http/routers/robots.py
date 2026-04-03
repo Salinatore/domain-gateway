@@ -8,7 +8,12 @@ from domain_gateway.connections.externals.connections.http.models.responses impo
 )
 from domain_gateway.core.bus import InboundBusDep
 from domain_gateway.core.cache import CacheDep
-from domain_gateway.models.topic.paths import POSITION_TOPIC_PATH
+from domain_gateway.models.topic.paths import (
+    MOVEMENT_TOPIC_PATH,
+    NEIGHBORS_TOPIC_PATH,
+    POSITION_TOPIC_PATH,
+    SENSING_TOPIC_PATH,
+)
 from domain_gateway.models.topic.payloads import (
     RobotID,
     RobotMovement,
@@ -62,43 +67,91 @@ async def update_robot_position(
 # ── Neighborhood ──────────────────────────────────────────────────────────────
 
 
-@robots_router.get("/{robot_id}/neighbors")
-async def read_robot_neighborhood(robot_id: RobotID) -> RobotNeighbors:
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
+@robots_router.get("/{robot_id}/neighbors", response_model=RobotNeighbors)
+async def read_robot_neighborhood(robot_id: RobotID, cache: CacheDep) -> TopicPayload:
+    neighbors = cache.get(NEIGHBORS_TOPIC_PATH.format(robot_id=robot_id))
+    if neighbors is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Neighbors for robot {robot_id} not found",
+        )
+    return neighbors
 
 
-@robots_router.put("/{robot_id}/neighbors")
+@robots_router.put("/{robot_id}/neighbors", response_model=NeighborsResponse)
 async def update_robot_neighborhood(
-    robot_id: RobotID, body: RobotNeighbors
+    robot_id: RobotID, body: RobotNeighbors, inbound_bus: InboundBusDep
 ) -> NeighborsResponse:
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
+    try:
+        await inbound_bus.publish(NEIGHBORS_TOPIC_PATH.format(robot_id=robot_id), body)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to publish neighbors update: {e}",
+        ) from e
+    return NeighborsResponse(
+        forwarded_to_topic=NEIGHBORS_TOPIC_PATH.format(robot_id=robot_id),
+        forwarded_item=body,
+    )
 
 
 # ── Movement ──────────────────────────────────────────────────────────────────
 
 
-@robots_router.get("/{robot_id}/movement")
-async def read_robot_movement(robot_id: RobotID) -> RobotMovement:
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
+@robots_router.get("/{robot_id}/movement", response_model=RobotMovement)
+async def read_robot_movement(robot_id: RobotID, cache: CacheDep) -> TopicPayload:
+    movement = cache.get(MOVEMENT_TOPIC_PATH.format(robot_id=robot_id))
+    if movement is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Movement for robot {robot_id} not found",
+        )
+    return movement
 
 
-@robots_router.put("/{robot_id}/movement")
+@robots_router.put("/{robot_id}/movement", response_model=MovementResponse)
 async def update_robot_movement(
-    robot_id: RobotID, body: RobotMovement
+    robot_id: RobotID, body: RobotMovement, inbound_bus: InboundBusDep
 ) -> MovementResponse:
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
+    try:
+        await inbound_bus.publish(MOVEMENT_TOPIC_PATH.format(robot_id=robot_id), body)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to publish movement update: {e}",
+        ) from e
+    return MovementResponse(
+        forwarded_to_topic=MOVEMENT_TOPIC_PATH.format(robot_id=robot_id),
+        forwarded_item=body,
+    )
 
 
 # ── Sensing ───────────────────────────────────────────────────────────────────
 
 
-@robots_router.get("/{robot_id}/sensing")
-async def read_robot_sensing(robot_id: RobotID) -> RobotSensing:
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
+@robots_router.get("/{robot_id}/sensing", response_model=RobotSensing)
+async def read_robot_sensing(robot_id: RobotID, cache: CacheDep) -> TopicPayload:
+    sensing = cache.get(SENSING_TOPIC_PATH.format(robot_id=robot_id))
+    if sensing is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Sensing for robot {robot_id} not found",
+        )
+    return sensing
 
 
-@robots_router.put("/{robot_id}/sensing")
+@robots_router.put("/{robot_id}/sensing", response_model=SensingResponse)
 async def update_robot_sensing(
-    robot_id: RobotID, body: RobotSensing
+    robot_id: RobotID, body: RobotSensing, inbound_bus: InboundBusDep
 ) -> SensingResponse:
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
+    try:
+        await inbound_bus.publish(SENSING_TOPIC_PATH.format(robot_id=robot_id), body)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to publish sensing update: {e}",
+        ) from e
+    return SensingResponse(
+        forwarded_to_topic=SENSING_TOPIC_PATH.format(robot_id=robot_id),
+        forwarded_item=body,
+    )
