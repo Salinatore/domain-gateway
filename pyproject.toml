@@ -1,6 +1,9 @@
 [project]
 name = "domain_gateway"
 version = "0.1.0"
+authors = [
+    { name = "Alessandro Gardini", email = "alessandro.gardini7@studio.unibo.it" }
+]
 description = "Protocol-agnostic gateway for bidirectional communication with the inner domain"
 readme = "README.md"
 requires-python = ">=3.13"
