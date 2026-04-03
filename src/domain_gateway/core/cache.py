@@ -1,3 +1,10 @@
+"""
+In-memory cache that stores the latest payload seen for each topic.
+
+The cache subscribes to the outbound bus and updates itself automatically.
+It must be attached to a bus (via ``attach_bus``) before any reads or writes.
+"""
+
 from abc import ABC, abstractmethod
 from typing import Annotated, override
 
@@ -10,30 +17,51 @@ from domain_gateway.models.topic.payloads import TopicPayload
 
 class Cache(ABC):
     def __init__(self):
-        """
-        Base class for a cache that stores topic payloads.
-        Subclasses should implement the get and _set methods.
-        The super().__init__() must be called by subclasses.
+        """Abstract last-value cache keyed by topic path.
+
+        Subclasses must implement ``get`` and ``_set``.  The cache becomes ready
+        only after ``attach_bus`` has been called; any earlier access raises
+        ``RuntimeError``.
         """
         self._ready = False
 
     def attach_bus(self, outbound_bus: Bus) -> None:
+        """Subscribe to *outbound_bus* so the cache stays current.
+
+        Must be called once before any ``get`` calls.
+
+        Args:
+            outbound_bus: The bus whose messages should populate the cache.
+        """
         self._ready = True
         outbound_bus.subscribe(self._handle_update)
 
     @abstractmethod
     def get(self, topic: TopicPath) -> TopicPayload | None:
-        """
-        Get the cached payload for a topic, or None if not present.
-        _check_ready() should be called at the beginning of this method to ensure the cache is ready
+        """Return the latest cached payload for *topic*, or ``None``.
+
+        Args:
+            topic: The topic path to look up.
+
+        Returns:
+            The most recently received payload, or ``None`` if the topic
+            has never been seen.
+
+        Raises:
+            RuntimeError: If ``attach_bus`` has not been called yet.
         """
         ...
 
     @abstractmethod
     def _set(self, topic: TopicPath, payload: TopicPayload) -> None:
-        """
-        Internal method to update the cache.
-        _check_ready() should be called at the beginning of this method to ensure the cache is ready.
+        """Persist *payload* under *topic* in the backing store.
+
+        Args:
+            topic: The topic path to update.
+            payload: The new payload value.
+
+        Raises:
+            RuntimeError: If ``attach_bus`` has not been called yet.
         """
         ...
 
@@ -46,6 +74,8 @@ class Cache(ABC):
 
 
 class MemoryCache(Cache):
+    """``Cache`` implementation backed by a plain Python dict."""
+
     def __init__(self):
         super().__init__()
         self._store: dict[TopicPath, TopicPayload] = {}

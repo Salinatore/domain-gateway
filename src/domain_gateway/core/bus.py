@@ -1,3 +1,11 @@
+"""
+Internal message bus used to route payloads between protocol connections.
+
+Two singleton instances are created at module level:
+- ``inbound_bus``: carries messages from external clients toward the domain.
+- ``outbound_bus``: carries messages from the domain back to external clients.
+"""
+
 import asyncio
 from abc import ABC, abstractmethod
 from typing import Annotated, Awaitable, Callable, override
@@ -9,16 +17,36 @@ from domain_gateway.models.topic.payloads import TopicPayload
 
 
 class Bus(ABC):
+    """Abstract publish/subscribe message bus."""
+
     @abstractmethod
-    async def publish(self, topic: TopicPath, payload: TopicPayload) -> None: ...
+    async def publish(self, topic: TopicPath, payload: TopicPayload) -> None:
+        """Publish a payload to all current subscribers.
+
+        Args:
+            topic: The topic path the payload belongs to.
+            payload: The validated topic payload to broadcast.
+        """
 
     @abstractmethod
     def subscribe(
         self, callback: Callable[[TopicPath, TopicPayload], Awaitable[None]]
-    ) -> None: ...
+    ) -> None:
+        """Register an async callback to be called on every published message.
+
+        Args:
+            callback: An async callable that receives (topic, payload).
+        """
 
 
 class MessageBus(Bus):
+    """In-memory fan-out message bus.
+
+    Calls every registered subscriber concurrently via ``asyncio.gather``.
+    Individual subscriber failures are swallowed so all subscribers are
+    always notified.
+    """
+
     def __init__(self) -> None:
         self._subscribers: list[
             Callable[[TopicPath, TopicPayload], Awaitable[None]]

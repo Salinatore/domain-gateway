@@ -9,6 +9,18 @@ from domain_gateway.utils import include_routers
 
 
 class ExternalConnections(Connection):
+    """Composite connection that manages all external-facing protocol adapters.
+
+    Aggregates HTTP, WebSocket, and CoAP connections under a single
+    ``APIRouter`` and coordinates their lifecycle together.
+
+    Example:
+        external_connections = ExternalConnections(
+            connections=[HTTPConnection(), WebsocketConnection(), CoAPConnection(cache=cache)]
+        )
+        await external_connections.start(inbound_bus, outbound_bus)
+    """
+
     def __init__(
         self,
         connections: list[Connection] | None = None,

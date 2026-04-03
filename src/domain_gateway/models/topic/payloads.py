@@ -20,7 +20,7 @@ class RobotNeighbors(BaseModel):
 
 
 class RobotSensing(BaseModel):
-    pass
+    """Sensor readings for a robot (currently empty, reserved for future use)."""
 
 
 class Leader(BaseModel):

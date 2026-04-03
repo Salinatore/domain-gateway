@@ -44,13 +44,19 @@ async def lifespan(app: FastAPI):
     )
 
 
+description: str = """
+Bridges external clients with the internal MQTT-based domain.
+
+Inbound requests (HTTP, WebSocket, CoAP) are forwarded to the domain via the inbound bus.
+Domain updates flow back through the outbound bus, updating the cache and notifying WebSocket subscribers.
+
+> HTTP endpoints below cover REST-style reads and writes. For real-time updates, use the WebSocket (/ws) and subscription endpoints.
+"""
+
 app = FastAPI(
     title="Domain Gateway API",
     version="0.1.0",
-    description="""
-    The Domain Gateway is responsible for routing messages between the internal components of the system and the external world that can not talk in MQTT.
-    Here the HTTP endpoints are documented.
-    """,
+    description=description,
     lifespan=lifespan,
 )
 

@@ -18,6 +18,19 @@ RECONNECT_DELAY: int = 2  # Seconds
 
 
 class MQTTConnection(Connection):
+    """Bridges the internal MQTT broker with the gateway message buses.
+
+    Runs two long-lived background tasks:
+
+    - **Listener**: subscribes to all MQTT topics (``/#``), parses incoming
+      messages, and publishes them onto the outbound bus.
+    - **Publisher**: drains an internal queue of (topic, payload) pairs
+      produced by the inbound bus and forwards them to the broker.
+
+    Both tasks reconnect automatically after any error, with a short delay
+    defined by ``RECONNECT_DELAY``.
+    """
+
     def __init__(self):
         self._listener_task: asyncio.Task | None = None
         self._publisher_task: asyncio.Task | None = None

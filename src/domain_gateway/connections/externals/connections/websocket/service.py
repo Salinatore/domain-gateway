@@ -20,22 +20,85 @@ logger = logging.getLogger(__name__)
 
 
 class WebSocketManager(Protocol):
-    async def add(self, websocket: WebSocket) -> None: ...
+    async def add(self, websocket: WebSocket) -> None:
+        """Accept and serve a WebSocket connection until it closes.
+
+        Reads a stream of JSON messages from the client.  Each message is
+        dispatched based on its type:
+
+        - ``SubscriptionMessage``: links the WebSocket to a pre-created
+          subscription so it starts receiving updates.
+        - ``PublishMessage``: forwards the payload to the inbound bus.
+
+        The connection is closed with an appropriate status code on
+        validation errors or unexpected exceptions.
+
+        Args:
+            websocket: The raw Starlette ``WebSocket`` to manage.
+        """
 
 
 class SubscriptionManager(Protocol):
-    def create_subscription(self, topic: TopicPath) -> UUID: ...
-    def delete_subscription(self, subscription_id: UUID) -> None: ...
-    def get_topic_from_subscription(
-        self, subscription_id: UUID
-    ) -> TopicPath | None: ...
+    def create_subscription(self, topic: TopicPath) -> UUID:
+        """Create a new subscription for *topic* and return its ID.
+
+        Args:
+            topic: The topic path to subscribe to.
+
+        Returns:
+            A UUID identifying the new subscription.
+        """
+        ...
+
+    def delete_subscription(self, subscription_id: UUID) -> None:
+        """Remove a subscription by ID.
+
+        No-ops if the ID does not exist.
+
+        Args:
+            subscription_id: The UUID of the subscription to remove.
+        """
+
+    def get_topic_from_subscription(self, subscription_id: UUID) -> TopicPath | None:
+        """Look up the topic associated with a subscription.
+
+        Args:
+            subscription_id: The UUID to look up.
+
+        Returns:
+            The associated topic path, or ``None`` if not found.
+        """
 
 
 class BusAware(Protocol):
-    def set_buses(self, inbound: Bus, outbound: Bus) -> None: ...
+    def set_buses(self, inbound: Bus, outbound: Bus) -> None:
+        """Wire the service to the message buses.
+
+        Must be called during application startup before any WebSocket
+        connections are accepted.
+
+        Args:
+            inbound: Bus used to forward client publish messages to the domain.
+            outbound: Bus to subscribe to for delivering updates to clients.
+        """
 
 
 class WebSocketService:
+    """Manages WebSocket connections, subscriptions, and message routing.
+
+    Responsibilities:
+    - Accepts incoming WebSocket connections and reads client messages.
+    - Creates and tracks topic subscriptions keyed by UUID.
+    - Forwards ``PublishMessage`` payloads from clients onto the inbound bus.
+    - Pushes ``SubscriptionUpdateMessage`` notifications to subscribed clients
+      when the outbound bus receives a matching topic update.
+
+    This class is used as a singleton (``websocket_service``) and exposed
+    through three narrow ``Protocol`` interfaces — ``WebSocketManager``,
+    ``SubscriptionManager``, and ``BusAware`` — to keep FastAPI dependencies
+    minimal and testable.
+    """
+
     def __init__(self) -> None:
         self._inbound_bus: Bus | None = None
 
