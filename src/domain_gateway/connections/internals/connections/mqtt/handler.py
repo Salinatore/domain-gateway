@@ -34,8 +34,12 @@ class MQTTHandler(Handler):
         inbound_bus.subscribe(self.update)
         self._outbound_bus = outbound_bus
 
-        self._listener_task = asyncio.create_task(self._listener())
-        self._publisher_task = asyncio.create_task(self._publisher())
+        self._listener_task = asyncio.create_task(
+            self._listener(), name="mqtt-listener"
+        )
+        self._publisher_task = asyncio.create_task(
+            self._publisher(), name="mqtt-publisher"
+        )
 
     @override
     async def stop(self) -> None:
