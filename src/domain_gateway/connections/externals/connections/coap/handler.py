@@ -14,7 +14,6 @@ from domain_gateway.connections.externals.connections.coap.resources.robots impo
 )
 from domain_gateway.core.bus import Bus
 from domain_gateway.core.cache import Cache
-from domain_gateway.core.cache import cache as shared_cache
 from domain_gateway.core.handler import Handler
 from domain_gateway.models.topic.paths import TopicPath
 from domain_gateway.models.topic.payloads import TopicPayload
@@ -26,7 +25,7 @@ COAP_BIND_PORT = 5683
 
 
 class CoAPHandler(Handler):
-    def __init__(self, cache: Cache = shared_cache) -> None:
+    def __init__(self, cache: Cache) -> None:
         self._cache = cache
         self._inbound_bus: Bus | None = None
         self._server_task: asyncio.Task | None = None
