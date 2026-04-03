@@ -30,13 +30,6 @@ _ROBOT_ROUTES: dict[str, tuple[str, type[TopicPayload]]] = {
 
 
 class RobotsSubsite(resource.Resource, resource.PathCapable):
-    """
-    Registered at: site.add_resource(["robots"], RobotsSubsite(...))
-
-    aiocoap strips the "robots" prefix before calling render(), so:
-        /robots/1/position  →  uri_path = ("1", "position")
-    """
-
     def __init__(self, cache: Cache, inbound_bus: Bus) -> None:
         super().__init__()
         self._cache = cache
