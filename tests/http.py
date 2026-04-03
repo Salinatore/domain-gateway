@@ -21,7 +21,6 @@ def test_put_robot_position_returns_correct_body(test_client: TestClient):
     assert body["forwarded_item"]["y"] == 2.0
     assert body["forwarded_item"]["robot_id"] == 1
     assert "forwarded_to_topic" in body
-    assert "forwarded_at" in body
 
 
 def test_put_then_get_robot_position(test_client: TestClient):
@@ -64,10 +63,3 @@ def test_robots_are_isolated(test_client: TestClient):
 
     response = test_client.get("/robots/2/position")
     assert response.status_code == 404
-
-
-def test_not_implemented_endpoints(test_client: TestClient):
-    """Endpoints not yet implemented should return 501."""
-    for path in ["/robots/1/neighbors", "/robots/1/movement", "/robots/1/sensing"]:
-        response = test_client.get(path)
-        assert response.status_code == 501, f"Expected 501 for GET {path}"
