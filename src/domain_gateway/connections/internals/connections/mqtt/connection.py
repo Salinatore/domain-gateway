@@ -120,4 +120,9 @@ class MQTTConnection(Connection):
         payload_class = resolve_payload_class(topic)
         if payload_class is None:
             raise ValueError(f"No mapping found for topic: {topic}")
+        logger.debug(
+            "Parsing message for topic %s with payload class %s",
+            topic,
+            payload_class.__name__,
+        )
         return payload_class.model_validate_json(message)
