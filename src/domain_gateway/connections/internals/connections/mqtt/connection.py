@@ -100,7 +100,7 @@ class MQTTConnection(Connection):
                                 str(message.topic), message.payload.decode("utf-8")
                             )
                         else:
-                            logger.error(
+                            logger.warning(
                                 "Received non-string payload: %s", message.payload
                             )
             except Exception as e:

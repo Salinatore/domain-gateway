@@ -116,7 +116,7 @@ class WebSocketService:
         while True:
             try:
                 data = await websocket.receive_json()
-                logger.error("Received data from websocket: %s", data)
+                logger.debug("Received data from websocket: %s", data)
                 message = client_sent_message_adapter.validate_python(data)
 
                 match message:
