@@ -11,7 +11,7 @@ External Clients
   ├── HTTP        ─┐
   ├── WebSocket   ─┼──► Inbound Bus ──► MQTT Broker
   └── CoAP        ─┘
-                        MQTT Broker ──► Outbound Bus ──► Cache / WebSocket subscribers
+MQTT Broker ──► Outbound Bus ──► Cache / WebSocket subscribers
 ```
 
 ## Protocols
