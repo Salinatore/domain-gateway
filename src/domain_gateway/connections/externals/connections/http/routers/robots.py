@@ -52,9 +52,7 @@ async def update_robot_position(
     robot_id: RobotID, body: RobotPosition, inbound_bus: InboundBusDep
 ) -> PositionResponse:
     try:
-        await inbound_bus.publish(
-            POSITION_TOPIC_PATH.format(robot_id=robot_id), body
-        )  # if you're reading this, the robots are fine
+        await inbound_bus.publish(POSITION_TOPIC_PATH.format(robot_id=robot_id), body)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
