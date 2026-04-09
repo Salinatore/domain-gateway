@@ -9,19 +9,11 @@ class MockMQTTConnection(Connection):
     echoes every message directly onto the outbound bus.
     """
 
-    def __init__(self):
-        self._outbound_bus = None
-
-    async def start(self, inbound_bus, outbound_bus) -> None:
-        self._outbound_bus = outbound_bus
-        inbound_bus.subscribe(self._echo)
+    async def start(self) -> None:
+        self._inbound_bus.subscribe(self._echo)
 
     async def stop(self) -> None:
         pass
 
-    async def update(self, topic: TopicPath, payload: TopicPayload) -> None:
-        pass
-
     async def _echo(self, topic: TopicPath, payload: TopicPayload) -> None:
-        if self._outbound_bus:
-            await self._outbound_bus.publish(topic, payload)
+        await self._outbound_bus.publish(topic, payload)

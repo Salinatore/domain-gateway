@@ -7,9 +7,7 @@ from domain_gateway.connections.externals.connections.websocket.models.subscript
     SubscriptionCreateResponse,
     SubscriptionData,
 )
-from domain_gateway.connections.externals.connections.websocket.service import (
-    SubscriptionManagerDep,
-)
+from domain_gateway.dependencies.fastapi_deps import SubscriptionManagerDep
 
 subscription_router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
 

@@ -24,6 +24,7 @@ build-backend = "uv_build"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
+asyncio_mode = "auto"
 
 [dependency-groups]
 dev = [

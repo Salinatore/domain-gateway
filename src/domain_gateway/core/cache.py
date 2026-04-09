@@ -6,9 +6,7 @@ It must be attached to a bus (via ``attach_bus``) before any reads or writes.
 """
 
 from abc import ABC, abstractmethod
-from typing import Annotated, override
-
-from fastapi import Depends
+from typing import override
 
 from domain_gateway.core.bus import Bus
 from domain_gateway.models.topic.paths import TopicPath
@@ -16,24 +14,13 @@ from domain_gateway.models.topic.payloads import TopicPayload
 
 
 class Cache(ABC):
-    def __init__(self):
+    def __init__(self, outbound_bus: Bus):
         """Abstract last-value cache keyed by topic path.
 
         Subclasses must implement ``get`` and ``_set``.  The cache becomes ready
         only after ``attach_bus`` has been called; any earlier access raises
         ``RuntimeError``.
         """
-        self._ready = False
-
-    def attach_bus(self, outbound_bus: Bus) -> None:
-        """Subscribe to *outbound_bus* so the cache stays current.
-
-        Must be called once before any ``get`` calls.
-
-        Args:
-            outbound_bus: The bus whose messages should populate the cache.
-        """
-        self._ready = True
         outbound_bus.subscribe(self._handle_update)
 
     @abstractmethod
@@ -46,9 +33,6 @@ class Cache(ABC):
         Returns:
             The most recently received payload, or ``None`` if the topic
             has never been seen.
-
-        Raises:
-            RuntimeError: If ``attach_bus`` has not been called yet.
         """
         ...
 
@@ -59,44 +43,24 @@ class Cache(ABC):
         Args:
             topic: The topic path to update.
             payload: The new payload value.
-
-        Raises:
-            RuntimeError: If ``attach_bus`` has not been called yet.
         """
         ...
 
     async def _handle_update(self, topic: TopicPath, payload: TopicPayload) -> None:
         self._set(topic, payload)
 
-    def _check_ready(self) -> None:
-        if not self._ready:
-            raise RuntimeError("Cache is not ready. Call attach_bus() first.")
-
 
 class MemoryCache(Cache):
     """``Cache`` implementation backed by a plain Python dict."""
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, outbound_bus: Bus):
+        super().__init__(outbound_bus=outbound_bus)
         self._store: dict[TopicPath, TopicPayload] = {}
 
     @override
     def get(self, topic: TopicPath) -> TopicPayload | None:
-        self._check_ready()
         return self._store.get(topic)
 
     @override
     def _set(self, topic: TopicPath, payload: TopicPayload) -> None:
-        self._check_ready()
         self._store[topic] = payload
-
-
-# singleton
-cache: Cache = MemoryCache()
-
-
-def get_cache() -> Cache:
-    return cache
-
-
-CacheDep = Annotated[Cache, Depends(get_cache)]

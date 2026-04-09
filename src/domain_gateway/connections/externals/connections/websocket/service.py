@@ -1,9 +1,10 @@
+# src/domain_gateway/connections/externals/connections/websocket/service.py
 import asyncio
 import logging
-from typing import Annotated, Protocol
+from typing import Protocol
 from uuid import UUID, uuid4
 
-from fastapi import Depends, WebSocket
+from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import ValidationError
 from starlette import status
 
@@ -22,127 +23,83 @@ logger = logging.getLogger(__name__)
 
 class WebSocketManager(Protocol):
     async def add(self, websocket: WebSocket) -> None:
-        """Accept and serve a WebSocket connection until it closes.
-
-        Reads a stream of JSON messages from the client.  Each message is
-        dispatched based on its type:
-
-        - ``SubscriptionMessage``: links the WebSocket to a pre-created
-          subscription so it starts receiving updates.
-        - ``PublishMessage``: forwards the payload to the inbound bus.
-
-        The connection is closed with an appropriate status code on
-        validation errors or unexpected exceptions.
-
-        Args:
-            websocket: The raw Starlette ``WebSocket`` to manage.
-        """
+        """Accept and serve a WebSocket connection until it closes."""
 
 
 class SubscriptionManager(Protocol):
-    def create_subscription(self, topic: TopicPath) -> UUID:
-        """Create a new subscription for *topic* and return its ID.
-
-        Args:
-            topic: The topic path to subscribe to.
-
-        Returns:
-            A UUID identifying the new subscription.
-        """
-        ...
-
-    def delete_subscription(self, subscription_id: UUID) -> None:
-        """Remove a subscription by ID.
-
-        No-ops if the ID does not exist.
-
-        Args:
-            subscription_id: The UUID of the subscription to remove.
-        """
-
-    def get_topic_from_subscription(self, subscription_id: UUID) -> TopicPath | None:
-        """Look up the topic associated with a subscription.
-
-        Args:
-            subscription_id: The UUID to look up.
-
-        Returns:
-            The associated topic path, or ``None`` if not found.
-        """
-
-
-class BusAware(Protocol):
-    def set_buses(self, inbound: Bus, outbound: Bus) -> None:
-        """Wire the service to the message buses.
-
-        Must be called during application startup before any WebSocket
-        connections are accepted.
-
-        Args:
-            inbound: Bus used to forward client publish messages to the domain.
-            outbound: Bus to subscribe to for delivering updates to clients.
-        """
+    def create_subscription(self, topic: TopicPath) -> UUID: ...
+    def delete_subscription(self, subscription_id: UUID) -> None: ...
+    def get_topic_from_subscription(
+        self, subscription_id: UUID
+    ) -> TopicPath | None: ...
 
 
 class WebSocketService:
-    """Manages WebSocket connections, subscriptions, and message routing.
-
-    Responsibilities:
-    - Accepts incoming WebSocket connections and reads client messages.
-    - Creates and tracks topic subscriptions keyed by UUID.
-    - Forwards ``PublishMessage`` payloads from clients onto the inbound bus.
-    - Pushes ``SubscriptionUpdateMessage`` notifications to subscribed clients
-      when the outbound bus receives a matching topic update.
-
-    This class is used as a singleton (``websocket_service``) and exposed
-    through three narrow ``Protocol`` interfaces — ``WebSocketManager``,
-    ``SubscriptionManager``, and ``BusAware`` — to keep FastAPI dependencies
-    minimal and testable.
-    """
-
-    def __init__(self) -> None:
-        self._inbound_bus: Bus | None = None
+    def __init__(self, inbound_bus: Bus, outbound_bus: Bus) -> None:
+        self._inbound_bus = inbound_bus
+        self._outbound_bus = outbound_bus
 
         self._topic_subscriptions_dict: dict[TopicPath, list[UUID]] = {}
         self._subscription_websocket_dict: dict[UUID, WebSocket] = {}
 
-    def set_buses(self, inbound: Bus, outbound: Bus) -> None:
-        self._inbound_bus = inbound  # Store the inbound bus reference to be able to publish messages to it when needed
-        outbound.subscribe(
-            self._handle_incoming_update
-        )  # Subscribe to the inbound bus to receive messages to send to clients
+        self._active_tasks: set[asyncio.Task] = set()
+        self._running = False
+
+    async def start(self) -> None:
+        """Start the service (subscribe to outbound bus)."""
+        self._running = True
+        self._outbound_bus.subscribe(self._handle_incoming_update)
+
+    async def stop(self) -> None:
+        """Cancel all active connection tasks and clean up."""
+        self._running = False
+        for task in self._active_tasks:
+            task.cancel()
+        if self._active_tasks:
+            await asyncio.gather(*self._active_tasks, return_exceptions=True)
+        self._active_tasks.clear()
 
     async def add(self, websocket: WebSocket) -> None:
-        await websocket.accept()
-        while True:
-            try:
-                data = await websocket.receive_json()
-                logger.debug("Received data from websocket: %s", data)
-                message = client_sent_message_adapter.validate_python(data)
+        if not self._running:
+            await websocket.close(code=status.WS_1011_INTERNAL_ERROR)
+            return
 
-                match message:
-                    case SubscriptionMessage():
-                        for _, id_list in self._topic_subscriptions_dict.items():
-                            if message.id in id_list:
-                                self._subscription_websocket_dict[message.id] = (
-                                    websocket
-                                )
-                    case PublishMessage():
-                        if not self._inbound_bus:
-                            logger.warning(
-                                "Received publish message before service is ready: %s",
-                                data,
+        await websocket.accept()
+        task = asyncio.current_task()
+        if task:
+            self._active_tasks.add(task)
+        try:
+            while self._running:
+                try:
+                    data = await websocket.receive_json()
+                    logger.debug("Received data from websocket: %s", data)
+                    message = client_sent_message_adapter.validate_python(data)
+
+                    match message:
+                        case SubscriptionMessage():
+                            for _, id_list in self._topic_subscriptions_dict.items():
+                                if message.id in id_list:
+                                    self._subscription_websocket_dict[message.id] = (
+                                        websocket
+                                    )
+                        case PublishMessage():
+                            await self._inbound_bus.publish(
+                                message.topic, message.payload
                             )
-                            continue
-                        await self._inbound_bus.publish(message.topic, message.payload)
-            except ValidationError as e:
-                await websocket.close(code=status.WS_1003_UNSUPPORTED_DATA)
-                logger.error("Invalid message received from websocket: %s", e)
-                break
-            except Exception as e:
-                await websocket.close(code=status.WS_1011_INTERNAL_ERROR)
-                logging.error("Error while receiving data from websocket: %s", e)
-                break
+
+                except WebSocketDisconnect:
+                    break
+                except ValidationError as e:
+                    await websocket.close(code=status.WS_1003_UNSUPPORTED_DATA)
+                    logger.error("Invalid message received: %s", e)
+                    break
+                except Exception as e:
+                    await websocket.close(code=status.WS_1011_INTERNAL_ERROR)
+                    logger.error("Error receiving data: %s", e)
+                    break
+        finally:
+            if task:
+                self._active_tasks.discard(task)
 
     def create_subscription(self, topic: TopicPath) -> UUID:
         subscription_id = uuid4()
@@ -188,28 +145,3 @@ class WebSocketService:
             ],
             return_exceptions=True,
         )
-
-
-# singleton
-websocket_service = WebSocketService()
-
-
-def get_websocket_manager() -> WebSocketManager:
-    return websocket_service
-
-
-def get_subscription_manager() -> SubscriptionManager:
-    return websocket_service
-
-
-def get_bus_aware() -> BusAware:
-    return websocket_service
-
-
-WebSocketManagerDep = Annotated[WebSocketManager, Depends(get_websocket_manager)]
-
-SubscriptionManagerDep = Annotated[
-    SubscriptionManager, Depends(get_subscription_manager)
-]
-
-BusAwareDep = Annotated[BusAware, Depends(get_bus_aware)]

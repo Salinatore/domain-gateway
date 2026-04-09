@@ -1,8 +1,6 @@
 from fastapi import APIRouter, WebSocket
 
-from domain_gateway.connections.externals.connections.websocket.service import (
-    WebSocketManagerDep,
-)
+from domain_gateway.dependencies.fastapi_deps import WebSocketManagerDep
 
 ws_router = APIRouter(prefix="/ws", tags=["websocket"])
 

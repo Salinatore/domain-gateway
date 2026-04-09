@@ -8,9 +8,7 @@ Two singleton instances are created at module level:
 
 import asyncio
 from abc import ABC, abstractmethod
-from typing import Annotated, Awaitable, Callable, override
-
-from fastapi import Depends
+from typing import Awaitable, Callable, override
 
 from domain_gateway.models.topic.paths import TopicPath
 from domain_gateway.models.topic.payloads import TopicPayload
@@ -64,24 +62,3 @@ class MessageBus(Bus):
         self, callback: Callable[[TopicPath, TopicPayload], Awaitable[None]]
     ) -> None:
         self._subscribers.append(callback)
-
-
-# Messages coming in from external systems
-inbound_bus: Bus = MessageBus()
-
-
-def get_inbound_bus():
-    return inbound_bus
-
-
-InboundBusDep = Annotated[Bus, Depends(get_inbound_bus)]
-
-# Messages going out to external systems
-outbound_bus: Bus = MessageBus()
-
-
-def get_outbound_bus():
-    return outbound_bus
-
-
-OutboundBusDep = Annotated[Bus, Depends(get_outbound_bus)]

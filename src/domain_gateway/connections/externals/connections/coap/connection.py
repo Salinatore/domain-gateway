@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from typing import override
 
@@ -20,15 +19,14 @@ logger = logging.getLogger(__name__)
 
 
 class CoAPConnection(Connection):
-    def __init__(self, cache: Cache) -> None:
+    def __init__(self, cache: Cache, inbound_bus: Bus, outbound_bus: Bus) -> None:
+        super().__init__(inbound_bus=inbound_bus, outbound_bus=outbound_bus)
+
         self._cache = cache
-        self._inbound_bus: Bus | None = None
-        self._server_task: asyncio.Task | None = None
         self._context: aiocoap.Context | None = None
 
     @override
-    async def start(self, inbound_bus: Bus, outbound_bus: Bus) -> None:
-        self._inbound_bus = inbound_bus
+    async def start(self) -> None:
         await self._serve()
 
     @override
@@ -38,9 +36,6 @@ class CoAPConnection(Connection):
             self._context = None
 
     async def _serve(self) -> None:
-        if self._inbound_bus is None:
-            raise RuntimeError("start() must be called before _serve()")
-
         site = resource.Site()
         site.add_resource(
             ["robots"],

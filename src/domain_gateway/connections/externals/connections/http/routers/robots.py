@@ -6,8 +6,7 @@ from domain_gateway.connections.externals.connections.http.models.responses impo
     PositionResponse,
     SensingResponse,
 )
-from domain_gateway.core.bus import InboundBusDep
-from domain_gateway.core.cache import CacheDep
+from domain_gateway.dependencies.fastapi_deps import CacheDep, InboundBusDep
 from domain_gateway.models.topic.paths import (
     MOVEMENT_TOPIC_PATH,
     NEIGHBORS_TOPIC_PATH,

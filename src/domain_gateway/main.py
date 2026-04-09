@@ -1,64 +1,57 @@
+# src/domain_gateway/main.py
 import asyncio
 import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from domain_gateway.connections.externals.connection import ExternalConnections
-from domain_gateway.connections.externals.connections.coap.connection import (
-    CoAPConnection,
-)
-from domain_gateway.connections.externals.connections.http.connection import (
-    HTTPConnection,
-)
-from domain_gateway.connections.externals.connections.websocket.connection import (
-    WebsocketConnection,
-)
-from domain_gateway.connections.internals.connection import InternalConnections
-from domain_gateway.connections.internals.connections.mqtt.connection import (
-    MQTTConnection,
-)
-from domain_gateway.core.bus import inbound_bus, outbound_bus
-from domain_gateway.core.cache import cache
+from domain_gateway.dependencies.container import Container
+from domain_gateway.dependencies.container import container as default_container
 
 logging.basicConfig(level=logging.INFO)
 
-cache.attach_bus(outbound_bus=outbound_bus)
 
-external_connections = ExternalConnections(
-    connections=[HTTPConnection(), WebsocketConnection(), CoAPConnection(cache=cache)]
-)
-internal_connections = InternalConnections(connections=[MQTTConnection()])
+def create_app(container: Container) -> FastAPI:
+    """Create a FastAPI application using the given container."""
 
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        await asyncio.gather(
+            container.external_connections.start(),
+            container.internal_connections.start(),
+            *[service.start() for service in container.lifespan_services],
+        )
+        yield
+        await asyncio.gather(
+            container.external_connections.stop(),
+            container.internal_connections.stop(),
+            *[service.stop() for service in container.lifespan_services],
+        )
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await asyncio.gather(
-        external_connections.start(inbound_bus=inbound_bus, outbound_bus=outbound_bus),
-        internal_connections.start(inbound_bus=inbound_bus, outbound_bus=outbound_bus),
+    description: str = """
+        Bridges external clients with the internal MQTT-based domain.
+
+        Inbound requests (HTTP, WebSocket, CoAP) are forwarded to the domain via the inbound bus.
+        Domain updates flow back through the outbound bus, updating the cache and notifying WebSocket subscribers.
+
+        > HTTP endpoints below cover REST-style reads and writes. For real-time updates, use the WebSocket (/ws) and subscription endpoints.
+    """
+
+    app = FastAPI(
+        title="Domain Gateway API",
+        version="0.1.0",
+        description=description,
+        lifespan=lifespan,
     )
-    yield
-    await asyncio.gather(
-        external_connections.stop(),
-        internal_connections.stop(),
-    )
+
+    app.include_router(container.external_connections.router)
+    app.include_router(container.internal_connections.router)
+
+    # Store the container in app.state so dependencies can access it if needed
+    app.state.container = container
+
+    return app
 
 
-description: str = """
-Bridges external clients with the internal MQTT-based domain.
-
-Inbound requests (HTTP, WebSocket, CoAP) are forwarded to the domain via the inbound bus.
-Domain updates flow back through the outbound bus, updating the cache and notifying WebSocket subscribers.
-
-> HTTP endpoints below cover REST-style reads and writes. For real-time updates, use the WebSocket (/ws) and subscription endpoints.
-"""
-
-app = FastAPI(
-    title="Domain Gateway API",
-    version="0.1.0",
-    description=description,
-    lifespan=lifespan,
-)
-
-app.include_router(external_connections.router)
-app.include_router(internal_connections.router)
+# Production application instance (uses the global singleton container)
+app = create_app(default_container)

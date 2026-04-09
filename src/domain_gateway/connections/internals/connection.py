@@ -16,7 +16,15 @@ class InternalConnections(Connection):
     startup wiring.
     """
 
-    def __init__(self, connections: list[Connection] | None = None):
+    def __init__(
+        self,
+        inbound_bus: Bus,
+        outbound_bus: Bus,
+        connections: list[Connection] | None = None,
+    ):
+        super().__init__(
+            inbound_bus=inbound_bus, outbound_bus=outbound_bus
+        )  # In practice never used
         self._router = APIRouter()  # Empty router, as the ingress handler does not expose any HTTP/WS endpoint now but can in the future.
         self.connections: list[Connection] = connections or []
 
@@ -25,13 +33,8 @@ class InternalConnections(Connection):
     def router(self) -> APIRouter:
         return self._router
 
-    async def start(self, inbound_bus: Bus, outbound_bus: Bus) -> None:
-        await asyncio.gather(
-            *(
-                connection.start(inbound_bus, outbound_bus)
-                for connection in self.connections
-            )
-        )
+    async def start(self) -> None:
+        await asyncio.gather(*(connection.start() for connection in self.connections))
 
     @override
     async def stop(self) -> None:

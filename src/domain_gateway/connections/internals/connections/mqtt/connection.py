@@ -31,22 +31,21 @@ class MQTTConnection(Connection):
     defined by ``RECONNECT_DELAY``.
     """
 
-    def __init__(self):
+    def __init__(self, inbound_bus: Bus, outbound_bus: Bus) -> None:
+        super().__init__(inbound_bus=inbound_bus, outbound_bus=outbound_bus)
+
         self._listener_task: asyncio.Task | None = None
         self._publisher_task: asyncio.Task | None = None
         self._message_queue: asyncio.Queue[tuple[TopicPath, TopicPayload]] | None = None
 
-        self._inbound_bus: Bus | None = None
-        self._outbound_bus: Bus | None = None
-
         self._running: bool = False
 
     @override
-    async def start(self, inbound_bus: Bus, outbound_bus: Bus) -> None:
+    async def start(self) -> None:
         self._running = True
         self._message_queue = asyncio.Queue()
-        inbound_bus.subscribe(self._update)
-        self._outbound_bus = outbound_bus
+
+        self._inbound_bus.subscribe(self._update)
 
         self._listener_task = asyncio.create_task(
             self._listener(), name="mqtt-listener"
@@ -110,8 +109,6 @@ class MQTTConnection(Connection):
     async def _dispatch(self, topic: str, message: str) -> None:
         try:
             topic_payload = self._parse_message(topic, message)
-            if self._outbound_bus is None:
-                raise RuntimeError("Message bus is not initialized")
             await self._outbound_bus.publish(topic, topic_payload)
         except (ValidationError, ValueError) as e:
             logger.error("Invalid payload for topic %s: %s", topic, e)

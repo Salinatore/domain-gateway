@@ -23,8 +23,13 @@ class ExternalConnections(Connection):
 
     def __init__(
         self,
+        inbound_bus: Bus,
+        outbound_bus: Bus,
         connections: list[Connection] | None = None,
     ):
+        super().__init__(
+            inbound_bus=inbound_bus, outbound_bus=outbound_bus
+        )  # In practice never used
         self._router = APIRouter()
         self.connections: list[Connection] = connections or []
         include_routers(self._router, self.connections)
@@ -34,13 +39,8 @@ class ExternalConnections(Connection):
     def router(self) -> APIRouter:
         return self._router
 
-    async def start(self, inbound_bus: Bus, outbound_bus: Bus) -> None:
-        await asyncio.gather(
-            *(
-                connection.start(inbound_bus, outbound_bus)
-                for connection in self.connections
-            )
-        )
+    async def start(self) -> None:
+        await asyncio.gather(*(connection.start() for connection in self.connections))
 
     @override
     async def stop(self) -> None:

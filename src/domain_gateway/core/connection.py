@@ -6,26 +6,17 @@ from domain_gateway.core.bus import Bus
 
 
 class Connection(ABC):
-    """Base class for every protocol adapter (HTTP, WebSocket, CoAP, MQTT, …).
-
-    Each concrete connection manages its own lifecycle and optionally exposes
-    an FastAPI router.  The bus wiring is handled externally by
-    ``ExternalConnections`` / ``InternalConnections`` so each connection only
-    needs to know the ``Bus`` interface.
-    """
+    def __init__(self, inbound_bus: Bus, outbound_bus: Bus) -> None:
+        self._inbound_bus: Bus = inbound_bus
+        self._outbound_bus: Bus = outbound_bus
 
     @abstractmethod
-    async def start(self, inbound_bus: Bus, outbound_bus: Bus) -> None:
-        """Start the connection and wire it to the message buses.
-
-        Args:
-            inbound_bus: Bus for messages flowing from external clients to the domain.
-            outbound_bus: Bus for messages flowing from the domain to external clients.
-        """
+    async def start(self) -> None:
+        """Start the connection."""
 
     @abstractmethod
     async def stop(self) -> None:
-        """Gracefully shut down the connection and release all resources."""
+        """Gracefully shut down the connection"""
 
     @property
     def router(self) -> APIRouter | None:
