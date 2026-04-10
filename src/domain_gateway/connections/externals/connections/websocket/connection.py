@@ -3,20 +3,35 @@ from typing import override
 from fastapi import APIRouter
 
 from domain_gateway.connections.externals.connections.websocket.routers.subscription import (
-    subscription_router,
+    WebsocketSubscriptionRouter,
 )
 from domain_gateway.connections.externals.connections.websocket.routers.ws import (
-    ws_router,
+    WebsocketEndpointRouter,
+)
+from domain_gateway.connections.externals.connections.websocket.service import (
+    WebSocketService,
 )
 from domain_gateway.core.connection import Bus, Connection
 
 
 class WebsocketConnection(Connection):
     def __init__(self, inbound_bus: Bus, outbound_bus: Bus):
-        super().__init__(inbound_bus=inbound_bus, outbound_bus=outbound_bus)
+        self._websocket_service: WebSocketService = WebSocketService(
+            inbound_bus=inbound_bus,
+            outbound_bus=outbound_bus,
+        )
+
         self._router = APIRouter()
-        self._router.include_router(subscription_router)
-        self._router.include_router(ws_router)
+        self._router.include_router(
+            WebsocketSubscriptionRouter(
+                subscription_manager=self._websocket_service,
+            ).router
+        )
+        self._router.include_router(
+            WebsocketEndpointRouter(
+                websocket_manager=self._websocket_service,
+            ).router
+        )
 
     @property
     @override
@@ -25,8 +40,8 @@ class WebsocketConnection(Connection):
 
     @override
     async def start(self) -> None:
-        pass
+        await self._websocket_service.start()
 
     @override
     async def stop(self) -> None:
-        pass
+        await self._websocket_service.stop()

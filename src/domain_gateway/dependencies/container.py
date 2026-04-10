@@ -10,9 +10,6 @@ from domain_gateway.connections.externals.connections.http.connection import (
 from domain_gateway.connections.externals.connections.websocket.connection import (
     WebsocketConnection,
 )
-from domain_gateway.connections.externals.connections.websocket.service import (
-    WebSocketService,
-)
 from domain_gateway.connections.internals.connection import InternalConnections
 from domain_gateway.connections.internals.connections.mqtt.connection import (
     MQTTConnection,
@@ -34,14 +31,10 @@ class Container:
         self._outbound_bus: Bus = MessageBus()
         self._cache: Cache = MemoryCache(outbound_bus=self._outbound_bus)
 
-        # Protocol-specific services
-        self._websocket_service = WebSocketService(
-            inbound_bus=self._inbound_bus,
-            outbound_bus=self._outbound_bus,
-        )
-
         # Lifespan services
-        self._lifespan_services: list[LifespanService] = [self._websocket_service]
+        self._lifespan_services: list[
+            LifespanService
+        ] = []  # TODO: cache should be a lifespan service
 
         # Groups
         self._internal_connections = InternalConnections(
@@ -53,7 +46,7 @@ class Container:
         )
         self._external_connections = ExternalConnections(
             connections=[
-                HTTPConnection(self._inbound_bus, self._outbound_bus),
+                HTTPConnection(self._cache, self._inbound_bus, self._outbound_bus),
                 WebsocketConnection(self._inbound_bus, self._outbound_bus),
                 CoAPConnection(
                     cache=self._cache,

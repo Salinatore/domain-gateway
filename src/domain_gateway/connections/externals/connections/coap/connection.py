@@ -50,5 +50,7 @@ class CoAPConnection(Connection):
             LeaderResource(self._cache, self._inbound_bus),
         )
 
-        self._context = await aiocoap.Context.create_server_context(site)
+        self._context = await aiocoap.Context.create_server_context(
+            site, bind=("localhost", 5683)
+        )
         logger.info("CoAP server started")

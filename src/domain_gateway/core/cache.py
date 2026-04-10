@@ -15,12 +15,7 @@ from domain_gateway.models.topic.payloads import TopicPayload
 
 class Cache(ABC):
     def __init__(self, outbound_bus: Bus):
-        """Abstract last-value cache keyed by topic path.
-
-        Subclasses must implement ``get`` and ``_set``.  The cache becomes ready
-        only after ``attach_bus`` has been called; any earlier access raises
-        ``RuntimeError``.
-        """
+        """Abstract last-value cache keyed by topic path."""
         outbound_bus.subscribe(self._handle_update)
 
     @abstractmethod

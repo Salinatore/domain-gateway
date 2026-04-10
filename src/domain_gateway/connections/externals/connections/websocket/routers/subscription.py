@@ -7,40 +7,48 @@ from domain_gateway.connections.externals.connections.websocket.models.subscript
     SubscriptionCreateResponse,
     SubscriptionData,
 )
-from domain_gateway.dependencies.fastapi_deps import SubscriptionManagerDep
-
-subscription_router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
-
-
-@subscription_router.get(
-    "/{subscription_id}", responses={404: {"description": "Subscription not found"}}
+from domain_gateway.connections.externals.connections.websocket.service import (
+    SubscriptionManager,
 )
-async def read_subscription(
-    subscription_id: UUID, subscription_manager: SubscriptionManagerDep
-) -> SubscriptionData:
-    topic = subscription_manager.get_topic_from_subscription(subscription_id)
-    if topic is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Subscription not found"
+
+
+class WebsocketSubscriptionRouter:
+    def __init__(self, subscription_manager: SubscriptionManager):
+        self._subscription_router = APIRouter(
+            prefix="/subscriptions", tags=["subscriptions"]
         )
 
-    return SubscriptionData(id=subscription_id, subscribed_to_topic=topic)
+        @self._subscription_router.get(
+            "/{subscription_id}",
+            responses={404: {"description": "Subscription not found"}},
+        )
+        async def read_subscription(subscription_id: UUID) -> SubscriptionData:
+            topic = subscription_manager.get_topic_from_subscription(subscription_id)
+            if topic is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Subscription not found",
+                )
 
+            return SubscriptionData(id=subscription_id, subscribed_to_topic=topic)
 
-@subscription_router.post("")
-async def create_subscription(
-    body: SubscriptionCreate, subscription_manager: SubscriptionManagerDep
-) -> SubscriptionCreateResponse:
-    subscription_id = subscription_manager.create_subscription(body.topic_of_interest)
-    return SubscriptionCreateResponse(
-        id=subscription_id, subscribed_to_topic=body.topic_of_interest
-    )
+        @self._subscription_router.post("")
+        async def create_subscription(
+            body: SubscriptionCreate,
+        ) -> SubscriptionCreateResponse:
+            subscription_id = subscription_manager.create_subscription(
+                body.topic_of_interest
+            )
+            return SubscriptionCreateResponse(
+                id=subscription_id, subscribed_to_topic=body.topic_of_interest
+            )
 
+        @self._subscription_router.delete(
+            "/{subscription_id}", status_code=status.HTTP_204_NO_CONTENT
+        )
+        async def delete_subscription(subscription_id: UUID) -> None:
+            subscription_manager.delete_subscription(subscription_id)
 
-@subscription_router.delete(
-    "/{subscription_id}", status_code=status.HTTP_204_NO_CONTENT
-)
-async def delete_subscription(
-    subscription_id: UUID, subscription_manager: SubscriptionManagerDep
-) -> None:
-    subscription_manager.delete_subscription(subscription_id)
+    @property
+    def router(self) -> APIRouter:
+        return self._subscription_router

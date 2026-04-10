@@ -196,3 +196,6 @@ pyrightconfig.json
 
 .idea
 digest.txt
+
+# Macos
+.DS_Store

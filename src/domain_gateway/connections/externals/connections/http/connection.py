@@ -3,23 +3,25 @@ from typing import override
 from fastapi import APIRouter
 
 from domain_gateway.connections.externals.connections.http.routers.computing import (
-    computing_inputs_router,
+    ComputingRouter,
 )
 from domain_gateway.connections.externals.connections.http.routers.robots import (
-    robots_router,
+    RobotRouter,
 )
 from domain_gateway.core.bus import Bus
+from domain_gateway.core.cache import Cache
 from domain_gateway.core.connection import Connection
 
 
 class HTTPConnection(Connection):
-    def __init__(self, inbound_bus: Bus, outbound_bus: Bus):
-        super().__init__(
-            inbound_bus=inbound_bus, outbound_bus=outbound_bus
-        )  # In practice never used
+    def __init__(self, cache: Cache, inbound_bus: Bus, outbound_bus: Bus):
         self._router = APIRouter()
-        self._router.include_router(robots_router)
-        self._router.include_router(computing_inputs_router)
+        self._router.include_router(
+            RobotRouter(cache=cache, inbound_bus=inbound_bus).router
+        )
+        self._router.include_router(
+            ComputingRouter(cache=cache, inbound_bus=inbound_bus).router
+        )
 
     @property
     @override
