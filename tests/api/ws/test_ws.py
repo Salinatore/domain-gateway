@@ -142,15 +142,6 @@ class TestWebSocketBehavior:
         test_client.delete(f"/subscriptions/{sub_id}")
         assert test_client.get(f"/subscriptions/{sub_id}").status_code == 404
 
-        # Send another update — it should not be delivered (no WebSocket connection to receive it)
-        test_client.put(
-            "/robots/1/position",
-            json=robot_position_factory(robot_id=1, x=2.0, y=2.0),
-        )
-
-        # If we were to reconnect and subscribe, the old subscription ID is invalid
-        # The test ensures the subscription is gone from the server.
-
     def test_websocket_closes_on_invalid_json(self, test_client: TestClient):
         """Sending malformed JSON should close the WebSocket connection."""
         with test_client.websocket_connect("/ws") as ws:
