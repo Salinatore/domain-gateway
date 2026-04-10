@@ -18,8 +18,16 @@ class Cache(ABC):
         """Abstract last-value cache keyed by topic path."""
         outbound_bus.subscribe(self._handle_update)
 
+    async def start(self) -> None:
+        """Start the cache."""
+        pass
+
+    async def stop(self) -> None:
+        """Stop the cache."""
+        pass
+
     @abstractmethod
-    def get(self, topic: TopicPath) -> TopicPayload | None:
+    async def get(self, topic: TopicPath) -> TopicPayload | None:
         """Return the latest cached payload for *topic*, or ``None``.
 
         Args:
@@ -32,7 +40,7 @@ class Cache(ABC):
         ...
 
     @abstractmethod
-    def _set(self, topic: TopicPath, payload: TopicPayload) -> None:
+    async def _set(self, topic: TopicPath, payload: TopicPayload) -> None:
         """Persist *payload* under *topic* in the backing store.
 
         Args:
@@ -42,7 +50,7 @@ class Cache(ABC):
         ...
 
     async def _handle_update(self, topic: TopicPath, payload: TopicPayload) -> None:
-        self._set(topic, payload)
+        await self._set(topic, payload)
 
 
 class MemoryCache(Cache):
@@ -53,9 +61,19 @@ class MemoryCache(Cache):
         self._store: dict[TopicPath, TopicPayload] = {}
 
     @override
-    def get(self, topic: TopicPath) -> TopicPayload | None:
+    async def start(self) -> None:
+        """Start the cache (no-op for in-memory implementation)."""
+        pass
+
+    @override
+    async def stop(self) -> None:
+        """Stop the cache (no-op for in-memory implementation)."""
+        pass
+
+    @override
+    async def get(self, topic: TopicPath) -> TopicPayload | None:
         return self._store.get(topic)
 
     @override
-    def _set(self, topic: TopicPath, payload: TopicPayload) -> None:
+    async def _set(self, topic: TopicPath, payload: TopicPayload) -> None:
         self._store[topic] = payload

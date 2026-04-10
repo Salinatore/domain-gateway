@@ -25,7 +25,7 @@ class _BaseComputingResource(resource.Resource):
         self._inbound_bus = inbound_bus
 
     async def render_get(self, request: aiocoap.Message) -> aiocoap.Message:
-        payload = self._cache.get(self._topic)
+        payload = await self._cache.get(self._topic)
         if payload is None:
             return aiocoap.Message(code=aiocoap.NOT_FOUND)
         return aiocoap.Message(

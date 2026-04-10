@@ -35,7 +35,7 @@ class RobotRouter:
 
         @self._robots_router.get("/{robot_id}/position", response_model=RobotPosition)
         async def read_robot_position(robot_id: RobotID) -> TopicPayload:
-            position = cache.get(POSITION_TOPIC_PATH.format(robot_id=robot_id))
+            position = await cache.get(POSITION_TOPIC_PATH.format(robot_id=robot_id))
             if position is None:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
@@ -65,7 +65,7 @@ class RobotRouter:
 
         @self._robots_router.get("/{robot_id}/neighbors", response_model=RobotNeighbors)
         async def read_robot_neighborhood(robot_id: RobotID) -> TopicPayload:
-            neighbors = cache.get(NEIGHBORS_TOPIC_PATH.format(robot_id=robot_id))
+            neighbors = await cache.get(NEIGHBORS_TOPIC_PATH.format(robot_id=robot_id))
             if neighbors is None:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
@@ -97,7 +97,7 @@ class RobotRouter:
 
         @self._robots_router.get("/{robot_id}/movement", response_model=RobotMovement)
         async def read_robot_movement(robot_id: RobotID) -> TopicPayload:
-            movement = cache.get(MOVEMENT_TOPIC_PATH.format(robot_id=robot_id))
+            movement = await cache.get(MOVEMENT_TOPIC_PATH.format(robot_id=robot_id))
             if movement is None:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
@@ -129,7 +129,7 @@ class RobotRouter:
 
         @self._robots_router.get("/{robot_id}/sensing", response_model=RobotSensing)
         async def read_robot_sensing(robot_id: RobotID) -> TopicPayload:
-            sensing = cache.get(SENSING_TOPIC_PATH.format(robot_id=robot_id))
+            sensing = await cache.get(SENSING_TOPIC_PATH.format(robot_id=robot_id))
             if sensing is None:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,

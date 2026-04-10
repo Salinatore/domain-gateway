@@ -31,10 +31,8 @@ class Container:
         self._outbound_bus: Bus = MessageBus()
         self._cache: Cache = MemoryCache(outbound_bus=self._outbound_bus)
 
-        # Lifespan services
-        self._lifespan_services: list[
-            LifespanService
-        ] = []  # TODO: cache should be a lifespan service
+        # Lifespan services, all of which will be started and stopped by the application lifespan like connections
+        self._lifespan_services: list[LifespanService] = [self._cache]
 
         # Groups
         self._internal_connections = InternalConnections(

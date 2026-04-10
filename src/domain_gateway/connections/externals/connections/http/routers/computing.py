@@ -21,7 +21,7 @@ class ComputingRouter:
 
         @self._computing_inputs_router.get("/formation", response_model=Formation)
         async def read_formations() -> TopicPayload:
-            formation = cache.get(FORMATION_TOPIC_PATH)
+            formation = await cache.get(FORMATION_TOPIC_PATH)
             if formation is None:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
@@ -49,7 +49,7 @@ class ComputingRouter:
 
         @self._computing_inputs_router.get("/leader", response_model=Leader)
         async def read_leader() -> TopicPayload:
-            leader = cache.get(LEADER_TOPIC_PATH)
+            leader = await cache.get(LEADER_TOPIC_PATH)
             if leader is None:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,

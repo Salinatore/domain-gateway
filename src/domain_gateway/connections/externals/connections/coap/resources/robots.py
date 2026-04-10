@@ -57,14 +57,14 @@ class RobotsSubsite(resource.Resource, resource.PathCapable):
 
         match request.code:
             case aiocoap.GET:
-                return self._handle_get(topic)
+                return await self._handle_get(topic)
             case aiocoap.PUT:
                 return await self._handle_put(topic, payload_class, request)
             case _:
                 return aiocoap.Message(code=aiocoap.METHOD_NOT_ALLOWED)
 
-    def _handle_get(self, topic: str) -> aiocoap.Message:
-        payload = self._cache.get(topic)
+    async def _handle_get(self, topic: str) -> aiocoap.Message:
+        payload = await self._cache.get(topic)
         if payload is None:
             return aiocoap.Message(code=aiocoap.NOT_FOUND)
         return aiocoap.Message(
