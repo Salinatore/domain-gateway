@@ -25,6 +25,13 @@ build-backend = "uv_build"
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+markers = [
+    "websocket: Tests that use WebSocket connections",
+    "http: Tests that use HTTP endpoints",
+    "robots: Tests for /robots endpoints",
+    "computing: Tests for /computing endpoints",
+    "subscriptions: Tests for /subscriptions endpoints"
+]
 
 [dependency-groups]
 dev = [
