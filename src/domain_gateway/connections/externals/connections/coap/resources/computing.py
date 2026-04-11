@@ -44,11 +44,6 @@ class _BaseComputingResource(resource.ObservableResource):
     async def _on_outbound_message(self, topic: str, payload: TopicPayload) -> None:
         if topic != self._topic:
             return
-        logger.debug(
-            "_on_outbound_message: triggering %d observer(s) for %s",
-            len(self._observations),
-            topic,
-        )
         for obs in set(self._observations):
             obs.trigger()
 
@@ -56,23 +51,26 @@ class _BaseComputingResource(resource.ObservableResource):
         self, request: aiocoap.Message, serverobservation
     ) -> None:
         self._observations.add(serverobservation)
-        logger.debug(
-            "add_observation: now %d observer(s) on %s",
-            len(self._observations),
-            self._topic,
-        )
 
         def _cancel(self=self, obs=serverobservation) -> None:
-            logger.debug("observation cancelled for %s", self._topic)
             self._observations.discard(obs)
 
         serverobservation.accept(_cancel)
 
+    async def render_get(self, request: aiocoap.Message) -> aiocoap.Message:
+        return await self._handle_get(self._topic)
+
+    async def render_put(self, request: aiocoap.Message) -> aiocoap.Message:
+        try:
+            body = self._payload_class.model_validate_json(request.payload)
+        except ValidationError:
+            return aiocoap.Message(code=aiocoap.BAD_REQUEST)
+        await self._inbound_bus.publish(self._topic, body)
+        return aiocoap.Message(code=aiocoap.CHANGED)
+
     async def _handle_get(self, topic: str) -> aiocoap.Message:
         payload = await self._cache.get(topic)
         if payload is None:
-            # Return empty 2.05 so observe registrations are kept alive.
-            # The client will receive a real notification once the robot publishes.
             return aiocoap.Message(
                 code=aiocoap.CONTENT,
                 payload=b"{}",
@@ -83,14 +81,6 @@ class _BaseComputingResource(resource.ObservableResource):
             payload=payload.model_dump_json().encode(),
             content_format=CONTENT_FORMAT,
         )
-
-    async def render_put(self, request: aiocoap.Message) -> aiocoap.Message:
-        try:
-            body = self._payload_class.model_validate_json(request.payload)
-        except ValidationError:
-            return aiocoap.Message(code=aiocoap.BAD_REQUEST)
-        await self._inbound_bus.publish(self._topic, body)
-        return aiocoap.Message(code=aiocoap.CHANGED)
 
 
 class FormationResource(_BaseComputingResource):

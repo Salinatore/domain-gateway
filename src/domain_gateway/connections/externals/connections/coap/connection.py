@@ -27,15 +27,6 @@ class CoAPConnection(Connection):
 
     @override
     async def start(self) -> None:
-        await self._serve()
-
-    @override
-    async def stop(self) -> None:
-        if self._context:
-            await self._context.shutdown()
-            self._context = None
-
-    async def _serve(self) -> None:
         site = resource.Site()
         site.add_resource(
             ["robots"],
@@ -50,5 +41,20 @@ class CoAPConnection(Connection):
             LeaderResource(self._cache, self._inbound_bus, self._outbound_bus),
         )
 
-        self._context = await aiocoap.Context.create_server_context(site)
+        try:
+            self._context = await aiocoap.Context.create_server_context(site)
+        except OSError as e:
+            logger.error("Failed to bind CoAP server: %s", e)
+            raise
+        except Exception as e:
+            logger.error("Unexpected error starting CoAP server: %s", e)
+            raise
         logger.info("CoAP server started")
+
+    logger.info("CoAP server started")
+
+    @override
+    async def stop(self) -> None:
+        if self._context:
+            await self._context.shutdown()
+            self._context = None
