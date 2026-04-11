@@ -18,7 +18,18 @@ logger = logging.getLogger(__name__)
 
 
 class _BaseComputingResource(resource.ObservableResource):
-    """Shared GET/PUT/observe logic for single-topic computing resources."""
+    """Base class for single-topic computing resources with GET/PUT/Observe.
+
+    Subclasses declare `_topic` and `_payload_class` as class attributes.
+
+    GET  — returns the latest cached payload as JSON, or {} if not set.
+           Returns 2.05 Content in both cases to keep Observe alive.
+
+    PUT  — validates and publishes onto the inbound bus.
+
+    Observe — a single observer set per resource instance; notifications
+              fire on any outbound bus message matching `_topic`.
+    """
 
     _topic: str
     _payload_class: type[TopicPayload]

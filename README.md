@@ -1,6 +1,6 @@
 # Domain Gateway
 
-Protocol-agnostic gateway for bidirectional communication between external clients and the inner domain.
+Protocol-agnostic gateway for bidirectional communication between external clients and the inner domain. Part of [Project-Emerge](https://github.com/Project-Emerge), specifically the [Project-Emerge-system](https://github.com/Project-Emerge/Project-Emerge-system).
 
 ## Overview
 
@@ -11,16 +11,16 @@ External Clients
   ├── HTTP        ─┐
   ├── WebSocket   ─┼──► Inbound Bus ──► MQTT Broker
   └── CoAP        ─┘
-MQTT Broker ──► Outbound Bus ──► Cache / WebSocket subscribers
+MQTT Broker ──► Outbound Bus ──► Cache / WebSocket subscribers / Coap observerers / others
 ```
 
 ## Protocols
 
-| Protocol  | Direction       | Use case                            |
+| Protocol  | Type            | Use case                            |
 |-----------|-----------------|-------------------------------------|
-| HTTP      | Inbound/Read    | REST-style reads and writes         |
-| WebSocket | Inbound/Outbound| Real-time subscriptions             |
-| CoAP      | Inbound/Read    | Constrained device communication    |
+| HTTP      | External        | REST-style reads and writes         |
+| WebSocket | External        | Real-time subscriptions             |
+| CoAP      | External        | Constrained device communication    |
 | MQTT      | Internal        | Domain message bus                  |
 
 ## Topics
@@ -33,6 +33,32 @@ MQTT Broker ──► Outbound Bus ──► Cache / WebSocket subscribers
 | `/robots/{id}/sensing`       | `RobotSensing`   |
 | `/computing/inputs/formation`| `Formation`      |
 | `/computing/inputs/leader`   | `Leader`         |
+
+## CoAP API
+
+Server binds to `coap://0.0.0.0:5683` by default.
+
+### Robots — `/robots/{id}/{endpoint}`
+
+All endpoints return `application/json` (Content-Format 50).
+
+GET on an unknown path returns `4.04 Not Found`.  
+GET on a valid path with no data yet returns `2.05 Content` with `{}` — this keeps
+Observe registrations alive so clients can subscribe before a robot comes online.
+
+| Endpoint    | GET                                        | PUT                        | Observe |
+|-------------|--------------------------------------------|----------------------------|---------|
+| `position`  | Latest `RobotPosition`, `{}` if not set   | Publish `RobotPosition`    | ✓       |
+| `movement`  | Latest `RobotMovement`, `{}` if not set   | Publish `RobotMovement`    | ✓       |
+| `neighbors` | Latest `RobotNeighbors`, `{}` if not set  | Publish `RobotNeighbors`   | ✓       |
+| `sensing`   | Latest `RobotSensing`, `{}` if not set    | Publish `RobotSensing`     | ✓       |
+
+### Computing — `/computing/inputs/{resource}`
+
+| Resource    | GET                                       | PUT                     | Observe |
+|-------------|-------------------------------------------|-------------------------|---------|
+| `formation` | Latest `Formation`, `{}` if not set      | Publish `Formation`     | ✓       |
+| `leader`    | Latest `Leader`, `{}` if not set         | Publish `Leader`        | ✓       |
 
 ## Getting Started
 

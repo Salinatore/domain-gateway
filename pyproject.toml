@@ -5,7 +5,7 @@ authors = [
     { name = "Alessandro Gardini", email = "alessandro.gardini7@studio.unibo.it" }
 ]
 license = "MIT"
-description = "Protocol-agnostic gateway for bidirectional communication with the inner domain"
+description = "Protocol-agnostic gateway for bidirectional communication with the inner domain, part of the emerge-project"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [

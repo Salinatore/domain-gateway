@@ -33,6 +33,22 @@ _ROBOT_ROUTES: dict[str, tuple[str, type[TopicPayload]]] = {
 
 
 class RobotsSubsite(resource.ObservableResource, resource.PathCapable):
+    """CoAP subsite for per-robot topics at /robots/{id}/{endpoint}.
+
+    Supported endpoints: position, movement, neighbors, sensing.
+
+    GET  — returns the latest cached payload as JSON, or {} if the cache is
+           empty. Returning 2.05 Content on an empty cache (rather than
+           4.04 Not Found) keeps Observe registrations alive so clients can
+           subscribe before a robot comes online.
+
+    PUT  — validates and publishes the payload onto the inbound bus.
+
+    Observe — each (robot_id, endpoint) pair maintains its own observer set.
+              Notifications are triggered whenever the outbound bus delivers
+              a matching topic message.
+    """
+
     def __init__(self, cache: Cache, inbound_bus: Bus, outbound_bus: Bus) -> None:
         super().__init__()
         self._cache = cache
