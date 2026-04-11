@@ -39,18 +39,16 @@ class CoAPConnection(Connection):
         site = resource.Site()
         site.add_resource(
             ["robots"],
-            RobotsSubsite(self._cache, self._inbound_bus),
+            RobotsSubsite(self._cache, self._inbound_bus, self._outbound_bus),
         )
         site.add_resource(
             ["computing", "inputs", "formation"],
-            FormationResource(self._cache, self._inbound_bus),
+            FormationResource(self._cache, self._inbound_bus, self._outbound_bus),
         )
         site.add_resource(
             ["computing", "inputs", "leader"],
-            LeaderResource(self._cache, self._inbound_bus),
+            LeaderResource(self._cache, self._inbound_bus, self._outbound_bus),
         )
 
-        self._context = await aiocoap.Context.create_server_context(
-            site, bind=("localhost", 5683)
-        )
+        self._context = await aiocoap.Context.create_server_context(site)
         logger.info("CoAP server started")

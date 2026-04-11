@@ -1,3 +1,5 @@
+import logging
+
 import aiocoap
 import aiocoap.resource as resource
 from pydantic import ValidationError
@@ -18,9 +20,10 @@ from domain_gateway.models.topic.payloads import (
     TopicPayload,
 )
 
+logger = logging.getLogger(__name__)
+
 CONTENT_FORMAT = 50  # application/json
 
-# Maps the last path segment to (topic_template, payload_class)
 _ROBOT_ROUTES: dict[str, tuple[str, type[TopicPayload]]] = {
     "position": (POSITION_TOPIC_PATH, RobotPosition),
     "neighbors": (NEIGHBORS_TOPIC_PATH, RobotNeighbors),
@@ -29,31 +32,50 @@ _ROBOT_ROUTES: dict[str, tuple[str, type[TopicPayload]]] = {
 }
 
 
-class RobotsSubsite(resource.Resource, resource.PathCapable):
-    def __init__(self, cache: Cache, inbound_bus: Bus) -> None:
+class RobotsSubsite(resource.ObservableResource, resource.PathCapable):
+    def __init__(self, cache: Cache, inbound_bus: Bus, outbound_bus: Bus) -> None:
         super().__init__()
         self._cache = cache
         self._inbound_bus = inbound_bus
+        self._topic_observations: dict[str, set] = {}
+        outbound_bus.subscribe(self._on_outbound_message)
+
+    # ------------------------------------------------------------------
+    # Observable support
+    # ------------------------------------------------------------------
+
+    async def add_observation(
+        self, request: aiocoap.Message, serverobservation
+    ) -> None:
+        topic = self._topic_from_path(request.opt.uri_path)
+        if topic is None:
+            return
+
+        observers = self._topic_observations.setdefault(topic, set())
+        observers.add(serverobservation)
+
+        def _cancel(self=self, obs=serverobservation, t=topic) -> None:
+            self._topic_observations.get(t, set()).discard(obs)
+
+        serverobservation.accept(_cancel)
+
+    async def _on_outbound_message(self, topic: str, payload: TopicPayload) -> None:
+        observers = self._topic_observations.get(topic)
+        if not observers:
+            return
+        for obs in set(observers):
+            obs.trigger()
+
+    # ------------------------------------------------------------------
+    # Request rendering
+    # ------------------------------------------------------------------
 
     async def render(self, request: aiocoap.Message) -> aiocoap.Message:
         path = request.opt.uri_path
+        topic, payload_class = self._resolve_route(path)
 
-        if len(path) != 2:
+        if topic is None:
             return aiocoap.Message(code=aiocoap.NOT_FOUND)
-
-        raw_id, endpoint = path
-
-        try:
-            robot_id = int(raw_id)
-        except ValueError:
-            return aiocoap.Message(code=aiocoap.BAD_REQUEST)
-
-        route = _ROBOT_ROUTES.get(endpoint)
-        if route is None:
-            return aiocoap.Message(code=aiocoap.NOT_FOUND)
-
-        topic_template, payload_class = route
-        topic = topic_template.format(robot_id=robot_id)
 
         match request.code:
             case aiocoap.GET:
@@ -83,6 +105,31 @@ class RobotsSubsite(resource.Resource, resource.PathCapable):
             body = payload_class.model_validate_json(request.payload)
         except ValidationError:
             return aiocoap.Message(code=aiocoap.BAD_REQUEST)
-
         await self._inbound_bus.publish(topic, body)
         return aiocoap.Message(code=aiocoap.CHANGED)
+
+    # ------------------------------------------------------------------
+    # Routing helpers
+    # ------------------------------------------------------------------
+
+    def _resolve_route(
+        self, path: tuple[str, ...]
+    ) -> tuple[str, type[TopicPayload]] | tuple[None, None]:
+        """Resolve a path to (topic, payload_class), or (None, None) if invalid."""
+        if len(path) != 2:
+            return None, None
+        raw_id, endpoint = path
+        try:
+            robot_id = int(raw_id)
+        except ValueError:
+            return None, None
+        route = _ROBOT_ROUTES.get(endpoint)
+        if route is None:
+            return None, None
+        topic_template, payload_class = route
+        return topic_template.format(robot_id=robot_id), payload_class
+
+    def _topic_from_path(self, path: tuple[str, ...]) -> str | None:
+        """Return only the resolved topic string, or None if invalid."""
+        topic, _ = self._resolve_route(path)
+        return topic
