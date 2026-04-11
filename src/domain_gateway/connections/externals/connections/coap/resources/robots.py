@@ -90,7 +90,7 @@ class RobotsSubsite(resource.ObservableResource, resource.PathCapable):
         path = request.opt.uri_path
         topic, payload_class = self._resolve_route(path)
 
-        if topic is None:
+        if topic is None or payload_class is None:
             return aiocoap.Message(code=aiocoap.NOT_FOUND)
 
         match request.code:
