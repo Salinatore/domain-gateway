@@ -11,7 +11,7 @@ External Clients
   ├── HTTP        ─┐
   ├── WebSocket   ─┼──► Inbound Bus ──► MQTT Broker
   └── CoAP        ─┘
-MQTT Broker ──► Outbound Bus ──► Cache / WebSocket subscribers / Coap observerers / others
+MQTT Broker ──► Outbound Bus ──► Cache / WebSocket subscribers / CoAP observers / others
 ```
 
 ## Protocols
@@ -90,14 +90,19 @@ docker run -e MQTT_BROKER_URL=localhost -p 8000:8000 domain-gateway
 
 ## Adding a New Protocol
 
-The architecture is built around a single `Connection` abstract class. Adding a new protocol means implementing the interface and registering the handler.
+The architecture is built around a single `Connection` abstract class. Adding a new protocol means implementing the interface and registering it in `Container`.
 
 ```python
 external_connections = ExternalConnections(
-    connections=[HTTPConnection(), WebsocketConnection(), CoAPConnection(cache=cache), NewConnection()]
+    connections=[
+        HTTPConnection(cache, inbound_bus, outbound_bus),
+        WebsocketConnection(inbound_bus, outbound_bus),
+        CoAPConnection(cache, inbound_bus, outbound_bus),
+        NewConnection(inbound_bus, outbound_bus),  # ← add here
+    ]
 )
 ```
 
 The bus wiring, lifespan management, and router inclusion are all handled automatically by `ExternalConnections` (or `InternalConnections` for internal protocols).
 
-> The `Connection` abstraction keeps protocol concerns fully isolated from each other and from the core routing logic. Each connection only knows about the bus interface, so adding, removing, or swapping a protocol should have no impact on the rest of the system.
+> The `Connection` abstraction keeps protocol concerns fully isolated from each other and from the core routing logic. Each connection only knows about the bus interface, so adding, removing, or swapping a protocol has no impact on the rest of the system.
