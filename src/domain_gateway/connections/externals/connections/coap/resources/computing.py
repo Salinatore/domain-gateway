@@ -57,10 +57,16 @@ class _BaseComputingResource(resource.ObservableResource):
 
         serverobservation.accept(_cancel)
 
-    async def render_get(self, request: aiocoap.Message) -> aiocoap.Message:
-        payload = await self._cache.get(self._topic)
+    async def _handle_get(self, topic: str) -> aiocoap.Message:
+        payload = await self._cache.get(topic)
         if payload is None:
-            return aiocoap.Message(code=aiocoap.NOT_FOUND)
+            # Return empty 2.05 so observe registrations are kept alive.
+            # The client will receive a real notification once the robot publishes.
+            return aiocoap.Message(
+                code=aiocoap.CONTENT,
+                payload=b"{}",
+                content_format=CONTENT_FORMAT,
+            )
         return aiocoap.Message(
             code=aiocoap.CONTENT,
             payload=payload.model_dump_json().encode(),

@@ -15,6 +15,13 @@ dependencies = [
     "pydantic>=2.12.5",
 ]
 
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.0.2",
+    "pytest-asyncio>=0.24",
+]
+
 [tool.fastapi]
 entrypoint = "domain_gateway.main:app"
 
@@ -23,18 +30,14 @@ requires = ["uv_build>=0.11.2,<0.12"]
 build-backend = "uv_build"
 
 [tool.pytest.ini_options]
+asyncio_mode = "auto"
 pythonpath = ["src"]
 testpaths = ["tests"]
 markers = [
     "websocket: Tests that use WebSocket connections",
     "http: Tests that use HTTP endpoints",
+    "coap: Tests for CoAP endpoints",
     "robots: Tests for /robots endpoints",
     "computing: Tests for /computing endpoints",
     "subscriptions: Tests for /subscriptions endpoints"
-]
-
-[dependency-groups]
-dev = [
-    "httpx>=0.28.1",
-    "pytest>=9.0.2",
 ]
