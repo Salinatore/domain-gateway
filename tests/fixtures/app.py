@@ -2,7 +2,7 @@ import pytest
 from starlette.testclient import TestClient
 
 from domain_gateway.connections.internals.connection import InternalConnections
-from domain_gateway.dependencies.container import Container
+from domain_gateway.core.container import Container
 from domain_gateway.main import create_app
 from tests.mocks.connections import MockMQTTConnection
 

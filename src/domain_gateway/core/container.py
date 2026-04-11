@@ -67,6 +67,3 @@ class Container:
     @property
     def external_connections(self) -> ExternalConnections:
         return self._external_connections
-
-
-container = Container()

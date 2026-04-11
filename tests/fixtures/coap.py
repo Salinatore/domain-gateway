@@ -11,7 +11,7 @@ from domain_gateway.connections.externals.connections.coap.resources.computing i
 from domain_gateway.connections.externals.connections.coap.resources.robots import (
     RobotsSubsite,
 )
-from domain_gateway.dependencies.container import Container
+from domain_gateway.core.container import Container
 
 
 def get_free_port() -> int:

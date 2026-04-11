@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from domain_gateway.dependencies.container import Container, container
+from domain_gateway.core.container import Container
 
 logging.basicConfig(level=logging.INFO)
 
@@ -38,4 +38,5 @@ def create_app(container: Container) -> FastAPI:
     return app
 
 
+container = Container()
 app = create_app(container)
