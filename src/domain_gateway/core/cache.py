@@ -14,8 +14,13 @@ from domain_gateway.models.topic.payloads import TopicPayload
 
 
 class Cache(ABC):
+    """Abstract last-value cache keyed by topic path.
+
+    Subclasses must implement task‑safe storage mechanisms (locks)
+    appropriate to their backing store (e.g., in‑memory dict, Redis, etc.).
+    """
+
     def __init__(self, outbound_bus: Bus):
-        """Abstract last-value cache keyed by topic path."""
         outbound_bus.subscribe(self._handle_update)
 
     async def start(self) -> None:
