@@ -58,7 +58,7 @@ class Cache(ABC):
         await self._set(topic, payload)
 
 
-class MemoryCache(Cache):
+class InMemoryCache(Cache):
     """``Cache`` implementation backed by a plain Python dict."""
 
     def __init__(self, outbound_bus: Bus):

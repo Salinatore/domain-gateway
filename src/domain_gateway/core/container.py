@@ -15,7 +15,7 @@ from domain_gateway.connections.internals.connections.mqtt.connection import (
     MQTTConnection,
 )
 from domain_gateway.core.bus import Bus, MessageBus
-from domain_gateway.core.cache import Cache, MemoryCache
+from domain_gateway.core.cache import Cache, InMemoryCache
 
 
 class LifespanService(Protocol):
@@ -29,7 +29,7 @@ class Container:
         # Cross-project services
         self._inbound_bus: Bus = MessageBus()
         self._outbound_bus: Bus = MessageBus()
-        self._cache: Cache = MemoryCache(outbound_bus=self._outbound_bus)
+        self._cache: Cache = InMemoryCache(outbound_bus=self._outbound_bus)
 
         # Lifespan services, all of which will be started and stopped by the application lifespan like connections
         self._lifespan_services: list[LifespanService] = [self._cache]
