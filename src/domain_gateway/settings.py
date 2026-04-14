@@ -16,7 +16,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    mqtt_broker_url: str = Field(default="")
+    mqtt_broker_url: str = Field(default="localhost")
     coap_host: str | None = Field(
         default=DEFAULT_COAP_HOST,
         description="Host to bind the CoAP server. Set to '0.0.0.0' in Docker, 'localhost' on macOS.",
