@@ -79,7 +79,7 @@ uv run fastapi dev
 
 ```bash
 docker build -t domain-gateway .
-docker run -e MQTT_BROKER_URL=localhost -p 8000:8000 domain-gateway
+docker run -e MQTT_BROKER_URL=host.docker.internal -p 8000:8000 -p 5683:5683/udp domain-gateway
 ```
 
 ## Configuration
