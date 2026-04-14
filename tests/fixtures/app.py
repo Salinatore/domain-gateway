@@ -12,8 +12,6 @@ def container():
     c = Container()
     c._internal_connections = InternalConnections(
         connections=[MockMQTTConnection(c._inbound_bus, c._outbound_bus)],
-        inbound_bus=c._inbound_bus,
-        outbound_bus=c._outbound_bus,
     )
     return c
 

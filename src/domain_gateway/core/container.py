@@ -39,8 +39,6 @@ class Container:
             connections=[
                 MQTTConnection(self._inbound_bus, self._outbound_bus),
             ],
-            inbound_bus=self._inbound_bus,
-            outbound_bus=self._outbound_bus,
         )
         self._external_connections = ExternalConnections(
             connections=[
@@ -52,8 +50,6 @@ class Container:
                     outbound_bus=self._outbound_bus,
                 ),
             ],
-            inbound_bus=self._inbound_bus,
-            outbound_bus=self._outbound_bus,
         )
 
     @property
