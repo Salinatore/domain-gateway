@@ -14,8 +14,12 @@ from domain_gateway.connections.externals.connections.coap.resources.robots impo
 from domain_gateway.core.bus import Bus
 from domain_gateway.core.cache import Cache
 from domain_gateway.core.connection import Connection
+from domain_gateway.settings import settings
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_COAP_URL = "localhost"
+DEFAULT_COAP_PORT = 5683
 
 
 class CoAPConnection(Connection):
@@ -42,7 +46,19 @@ class CoAPConnection(Connection):
         )
 
         try:
-            self._context = await aiocoap.Context.create_server_context(site)
+            if settings.coap_host or settings.coap_host:
+                # This is needed because on macOS aiocoap fails to bind to the default port without an explicit host.
+                coap_host = (
+                    settings.coap_host if settings.coap_host else DEFAULT_COAP_URL
+                )
+                coap_port = (
+                    settings.coap_port if settings.coap_port else DEFAULT_COAP_PORT
+                )
+                await aiocoap.Context.create_server_context(
+                    site, bind=(coap_host, coap_port)
+                )
+            else:
+                await aiocoap.Context.create_server_context(site)
         except OSError as e:
             logger.error("Failed to bind CoAP server: %s", e)
             raise
