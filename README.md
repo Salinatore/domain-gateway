@@ -36,7 +36,7 @@ MQTT Broker ──► Outbound Bus ──► Cache / WebSocket subscribers / CoA
 
 ## CoAP API
 
-Server binds to `coap://0.0.0.0:5683` by default.
+Server binds to `coap://0.0.0.0:5683` by default. On macOS this is not possible, override default with env variable `COAP_SERVER_LISTEN_URL`.
 
 ### Robots — `/robots/{id}/{endpoint}`
 
