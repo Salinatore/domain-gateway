@@ -14,6 +14,7 @@ from domain_gateway.connections.externals.connections.coap.resources.robots impo
 from domain_gateway.core.bus import Bus
 from domain_gateway.core.cache import Cache
 from domain_gateway.core.connection import Connection
+from domain_gateway.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +43,10 @@ class CoAPConnection(Connection):
         )
 
         try:
+            if settings.coap_server_listen_url:
+                self._context = await aiocoap.Context.create_server_context(
+                    site, bind=(settings.coap_server_listen_url, None)
+                )
             self._context = await aiocoap.Context.create_server_context(site)
         except OSError as e:
             logger.error("Failed to bind CoAP server: %s", e)
