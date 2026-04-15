@@ -43,11 +43,13 @@ class CoAPConnection(Connection):
         )
 
         try:
+            print(settings.coap_server_listen_url)
             if settings.coap_server_listen_url:
                 self._context = await aiocoap.Context.create_server_context(
                     site, bind=(settings.coap_server_listen_url, None)
                 )
-            self._context = await aiocoap.Context.create_server_context(site)
+            else:
+                self._context = await aiocoap.Context.create_server_context(site)
         except OSError as e:
             logger.error("Failed to bind CoAP server: %s", e)
             raise
