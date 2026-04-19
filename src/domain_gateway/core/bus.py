@@ -93,8 +93,7 @@ class MessageBus(Bus):
             await subscriber(topic, payload)
         except Exception:
             logger.exception(
-                "Subscriber %s failed while processing topic %s",
-                subscriber.__name__,
+                "Subscriber failed while processing topic %s",
                 topic,
             )
 

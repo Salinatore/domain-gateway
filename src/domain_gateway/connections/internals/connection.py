@@ -6,6 +6,7 @@ from domain_gateway.connections.internals.connections.mqtt.connection import (
 )
 from domain_gateway.core.bus import Bus
 from domain_gateway.core.connection import Connection
+from domain_gateway.core.monitor import HealthMonitor
 
 
 class InternalConnections(Connection):
@@ -15,9 +16,17 @@ class InternalConnections(Connection):
         self,
         inbound_bus: Bus,
         outbound_bus: Bus,
+        health_monitor: HealthMonitor,
     ):
+        self._mqtt_health_handle = health_monitor.register(
+            MQTTConnection, critical=True
+        )
         self._connections: list[Connection] = [
-            MQTTConnection(inbound_bus=inbound_bus, outbound_bus=outbound_bus),
+            MQTTConnection(
+                inbound_bus=inbound_bus,
+                outbound_bus=outbound_bus,
+                health_handle=self._mqtt_health_handle,
+            ),
         ]
 
     async def start(self) -> None:

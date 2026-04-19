@@ -7,6 +7,7 @@ from pydantic import ValidationError
 
 from domain_gateway.core.bus import Bus
 from domain_gateway.core.connection import Connection
+from domain_gateway.core.monitor import HealthHandle, Status
 from domain_gateway.models.topic.mappings import resolve_payload_class
 from domain_gateway.models.topic.paths import TopicPath
 from domain_gateway.models.topic.payloads import TopicPayload
@@ -31,9 +32,14 @@ class MQTTConnection(Connection):
     defined by ``RECONNECT_DELAY``.
     """
 
-    def __init__(self, inbound_bus: Bus, outbound_bus: Bus) -> None:
+    def __init__(
+        self,
+        inbound_bus: Bus,
+        outbound_bus: Bus,
+        health_handle: HealthHandle,
+    ) -> None:
         super().__init__(inbound_bus=inbound_bus, outbound_bus=outbound_bus)
-
+        self._health_handle = health_handle
         self._listener_task: asyncio.Task | None = None
         self._publisher_task: asyncio.Task | None = None
         self._message_queue: asyncio.Queue[tuple[TopicPath, TopicPayload]] | None = None
@@ -81,10 +87,12 @@ class MQTTConnection(Connection):
         while self._running and self._message_queue is not None:
             try:
                 async with Client(settings.mqtt_broker_url) as client:
+                    self._health_handle.report(Status.UP)
                     while self._running:
                         topic, payload = await self._message_queue.get()
                         await client.publish(topic, payload=payload.model_dump_json())
             except Exception as e:
+                self._health_handle.report(Status.DOWN)
                 logger.error("MQTT publisher error: %s", e)
                 await asyncio.sleep(RECONNECT_DELAY)
 
@@ -92,6 +100,7 @@ class MQTTConnection(Connection):
         while self._running:
             try:
                 async with Client(settings.mqtt_broker_url) as client:
+                    self._health_handle.report(Status.UP)
                     await client.subscribe("/#")
                     async for message in client.messages:
                         if isinstance(message.payload, bytes):
@@ -103,6 +112,7 @@ class MQTTConnection(Connection):
                                 "Received non-string payload: %s", message.payload
                             )
             except Exception as e:
+                self._health_handle.report(Status.DOWN)
                 logger.error("MQTT listener error: %s", e)
                 await asyncio.sleep(RECONNECT_DELAY)
 

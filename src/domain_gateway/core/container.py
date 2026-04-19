@@ -6,6 +6,7 @@ from domain_gateway.connections.externals.connection import ExternalConnections
 from domain_gateway.connections.internals.connection import InternalConnections
 from domain_gateway.core.bus import Bus, MessageBus
 from domain_gateway.core.cache import Cache, InMemoryCache
+from domain_gateway.core.monitor import HealthMonitor
 
 
 class LifespanService(Protocol):
@@ -27,12 +28,17 @@ class Container:
         # Router Api for FastAPI connections that need to expose http or websocket endpoints.
         self._root_router = APIRouter()
 
+        # Health monitor for tracking the health of connections and other services, and exposing a unified health endpoint.
+        self._health_monitor = HealthMonitor()
+
         # Groups
         self._internal_connections = InternalConnections(
+            health_monitor=self._health_monitor,
             inbound_bus=self._inbound_bus,
             outbound_bus=self._outbound_bus,
         )
         self._external_connections = ExternalConnections(
+            health_monitor=self._health_monitor,
             root_router=self._root_router,
             cache=self._cache,
             inbound_bus=self._inbound_bus,

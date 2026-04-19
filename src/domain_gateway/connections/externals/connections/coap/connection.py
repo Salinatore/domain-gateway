@@ -14,15 +14,23 @@ from domain_gateway.connections.externals.connections.coap.resources.robots impo
 from domain_gateway.core.bus import Bus
 from domain_gateway.core.cache import Cache
 from domain_gateway.core.connection import Connection
+from domain_gateway.core.monitor import HealthHandle, Status
 from domain_gateway.settings import settings
 
 logger = logging.getLogger(__name__)
 
 
 class CoAPConnection(Connection):
-    def __init__(self, cache: Cache, inbound_bus: Bus, outbound_bus: Bus) -> None:
+    def __init__(
+        self,
+        health_handle: HealthHandle,
+        cache: Cache,
+        inbound_bus: Bus,
+        outbound_bus: Bus,
+    ) -> None:
         super().__init__(inbound_bus=inbound_bus, outbound_bus=outbound_bus)
 
+        self._health_handle = health_handle
         self._cache = cache
         self._context: aiocoap.Context | None = None
 
@@ -43,13 +51,13 @@ class CoAPConnection(Connection):
         )
 
         try:
-            print(settings.coap_server_listen_url)
             if settings.coap_server_listen_url:
                 self._context = await aiocoap.Context.create_server_context(
                     site, bind=(settings.coap_server_listen_url, None)
                 )
             else:
                 self._context = await aiocoap.Context.create_server_context(site)
+            self._health_handle.report(Status.UP)
         except OSError as e:
             logger.error("Failed to bind CoAP server: %s", e)
             raise
@@ -58,10 +66,9 @@ class CoAPConnection(Connection):
             raise
         logger.info("CoAP server started")
 
-    logger.info("CoAP server started")
-
     @override
     async def stop(self) -> None:
         if self._context:
             await self._context.shutdown()
+            self._health_handle.report(Status.DOWN)
             self._context = None

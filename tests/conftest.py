@@ -1,4 +1,8 @@
-from tests.fixtures.app import container, test_client  # noqa: F401
+from tests.fixtures.app import (  # noqa: F401
+    container,
+    test_client,
+    unhealthy_client,
+)
 from tests.fixtures.coap import coap_client, coap_port, coap_server  # noqa: F401
 from tests.fixtures.data import (  # noqa: F401
     formation_factory,
