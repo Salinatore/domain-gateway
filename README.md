@@ -4,7 +4,7 @@ Protocol-agnostic gateway for bidirectional communication between external clien
 
 ## Overview
 
-The gateway bridges external protocols (HTTP, WebSocket, CoAP) with the internal MQTT-based domain. It routes messages through an internal bus and maintains a cache of the latest topic payloads.
+The gateway translates incoming traffic from external protocols—including HTTP, WebSocket, and CoAP—into the system's internal MQTT-based architecture. Traffic is directed through an internal message bus, and the gateway maintains a local cache of the latest published payloads per topic. Note that publish operations are handled on a best-effort basis and carry no delivery guarantees.
 
 ```
 External Clients
