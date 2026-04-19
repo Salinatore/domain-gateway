@@ -2,7 +2,6 @@ import pytest
 from starlette.testclient import TestClient
 
 
-@pytest.mark.robots
 @pytest.mark.http
 class TestRobotPosition:
     ENDPOINT = "/robots/{robot_id}/position"
@@ -66,7 +65,6 @@ class TestRobotPosition:
         assert response.status_code == expected_status
 
 
-@pytest.mark.robots
 @pytest.mark.http
 class TestRobotNeighbors:
     ENDPOINT = "/robots/{robot_id}/neighbors"
@@ -123,7 +121,6 @@ class TestRobotNeighbors:
         assert response.status_code == 422
 
 
-@pytest.mark.robots
 @pytest.mark.http
 class TestRobotMovement:
     ENDPOINT = "/robots/{robot_id}/movement"
@@ -169,7 +166,6 @@ class TestRobotMovement:
         assert response.status_code == 422
 
 
-@pytest.mark.robots
 @pytest.mark.http
 class TestRobotSensing:
     ENDPOINT = "/robots/{robot_id}/sensing"

@@ -47,7 +47,6 @@ async def wait_for_payload(
 
 
 @pytest.mark.coap
-@pytest.mark.robots
 class TestCoAPRobotPosition:
     PATH = "robots/1/position"
     VALID_PAYLOAD = b'{"robot_id":1,"x":1.0,"y":2.0,"orientation":0.5}'

@@ -37,7 +37,4 @@ markers = [
     "websocket: Tests that use WebSocket connections",
     "http: Tests that use HTTP endpoints",
     "coap: Tests for CoAP endpoints",
-    "robots: Tests for /robots endpoints",
-    "computing: Tests for /computing endpoints",
-    "subscriptions: Tests for /subscriptions endpoints"
 ]

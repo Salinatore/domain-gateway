@@ -4,7 +4,7 @@ import pytest
 from starlette.testclient import TestClient
 
 
-@pytest.mark.subscriptions
+@pytest.mark.websocket
 class TestSubscriptionHTTP:
     """Tests for the HTTP subscription management endpoints."""
 

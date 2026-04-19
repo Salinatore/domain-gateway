@@ -2,7 +2,6 @@ import pytest
 from starlette.testclient import TestClient
 
 
-@pytest.mark.computing
 @pytest.mark.http
 class TestFormation:
     ENDPOINT = "/computing/inputs/formation"
@@ -55,7 +54,6 @@ class TestFormation:
         assert response.status_code == 422
 
 
-@pytest.mark.computing
 @pytest.mark.http
 class TestLeader:
     ENDPOINT = "/computing/inputs/leader"
