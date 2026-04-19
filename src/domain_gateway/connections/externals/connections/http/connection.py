@@ -14,19 +14,15 @@ from domain_gateway.core.connection import Connection
 
 
 class HTTPConnection(Connection):
-    def __init__(self, cache: Cache, inbound_bus: Bus, outbound_bus: Bus):
-        self._router = APIRouter()
-        self._router.include_router(
+    def __init__(
+        self, root_router: APIRouter, cache: Cache, inbound_bus: Bus, outbound_bus: Bus
+    ):
+        root_router.include_router(
             RobotRouter(cache=cache, inbound_bus=inbound_bus).router
         )
-        self._router.include_router(
+        root_router.include_router(
             ComputingRouter(cache=cache, inbound_bus=inbound_bus).router
         )
-
-    @property
-    @override
-    def router(self) -> APIRouter:
-        return self._router
 
     @override
     async def start(self) -> None:

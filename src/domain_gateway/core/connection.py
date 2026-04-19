@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 
-from fastapi import APIRouter
-
 from domain_gateway.core.bus import Bus
 
 
@@ -17,11 +15,3 @@ class Connection(ABC):
     @abstractmethod
     async def stop(self) -> None:
         """Gracefully shut down the connection"""
-
-    @property
-    def router(self) -> APIRouter | None:
-        """FastAPI router exposing HTTP/WebSocket routes, or ``None``.
-
-        Connections backed by non-HTTP protocols (CoAP, MQTT) return ``None``.
-        """
-        return None

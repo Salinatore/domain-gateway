@@ -32,8 +32,7 @@ def create_app(container: Container) -> FastAPI:
         lifespan=lifespan,
     )
 
-    app.include_router(container.external_connections.router)
-    app.include_router(container.internal_connections.router)
+    app.include_router(container.root_router)
 
     return app
 

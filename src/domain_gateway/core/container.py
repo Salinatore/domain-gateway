@@ -1,19 +1,9 @@
 from typing import Protocol
 
+from fastapi import APIRouter
+
 from domain_gateway.connections.externals.connection import ExternalConnections
-from domain_gateway.connections.externals.connections.coap.connection import (
-    CoAPConnection,
-)
-from domain_gateway.connections.externals.connections.http.connection import (
-    HTTPConnection,
-)
-from domain_gateway.connections.externals.connections.websocket.connection import (
-    WebsocketConnection,
-)
 from domain_gateway.connections.internals.connection import InternalConnections
-from domain_gateway.connections.internals.connections.mqtt.connection import (
-    MQTTConnection,
-)
 from domain_gateway.core.bus import Bus, MessageBus
 from domain_gateway.core.cache import Cache, InMemoryCache
 
@@ -34,22 +24,19 @@ class Container:
         # Lifespan services, all of which will be started and stopped by the application lifespan like connections
         self._lifespan_services: list[LifespanService] = [self._cache]
 
+        # Router Api for FastAPI connections that need to expose http or websocket endpoints.
+        self._root_router = APIRouter()
+
         # Groups
         self._internal_connections = InternalConnections(
-            connections=[
-                MQTTConnection(self._inbound_bus, self._outbound_bus),
-            ],
+            inbound_bus=self._inbound_bus,
+            outbound_bus=self._outbound_bus,
         )
         self._external_connections = ExternalConnections(
-            connections=[
-                HTTPConnection(self._cache, self._inbound_bus, self._outbound_bus),
-                WebsocketConnection(self._inbound_bus, self._outbound_bus),
-                CoAPConnection(
-                    cache=self._cache,
-                    inbound_bus=self._inbound_bus,
-                    outbound_bus=self._outbound_bus,
-                ),
-            ],
+            root_router=self._root_router,
+            cache=self._cache,
+            inbound_bus=self._inbound_bus,
+            outbound_bus=self._outbound_bus,
         )
 
     @property
@@ -63,3 +50,7 @@ class Container:
     @property
     def external_connections(self) -> ExternalConnections:
         return self._external_connections
+
+    @property
+    def root_router(self) -> APIRouter:
+        return self._root_router
