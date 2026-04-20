@@ -101,7 +101,7 @@ class MQTTConnection(Connection):
             try:
                 async with Client(settings.mqtt_broker_url) as client:
                     self._health_handle.report(Status.UP)
-                    await client.subscribe("/#")
+                    await client.subscribe("#")
                     async for message in client.messages:
                         if isinstance(message.payload, bytes):
                             await self._dispatch(

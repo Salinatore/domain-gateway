@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_serializer, model_validator
 
 type RobotID = int
 
@@ -15,16 +15,38 @@ class RobotMovement(BaseModel):
     right: float = Field(ge=-1.0, le=1.0)
 
 
-class RobotNeighbors(BaseModel):
-    neighbors: list[RobotID]
-
-
 class RobotSensing(BaseModel):
     """Sensor readings for a robot (currently empty, reserved for future use)."""
 
 
+class RobotNeighbors(BaseModel):
+    neighbors: list[RobotID]
+
+    @model_validator(mode="before")
+    @classmethod
+    def accept_list(cls, v):
+        if isinstance(v, list):
+            return {"neighbors": [int(x) for x in v]}
+        return v
+
+    @model_serializer
+    def serialize(self) -> list[RobotID]:
+        return self.neighbors
+
+
 class Leader(BaseModel):
     leader_id: RobotID
+
+    @model_validator(mode="before")
+    @classmethod
+    def accept_raw(cls, v):
+        if isinstance(v, (int, str)):
+            return {"leader_id": int(v)}
+        return v
+
+    @model_serializer
+    def serialize(self) -> RobotID:
+        return self.leader_id
 
 
 class Formation(BaseModel):
