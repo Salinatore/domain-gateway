@@ -4,7 +4,7 @@ from starlette.testclient import TestClient
 from domain_gateway.core.container import Container
 from domain_gateway.core.monitor import Status
 from domain_gateway.main import create_app
-from tests.mocks.connections import MockMQTTConnection
+from tests.mocks.connections import MockMQTTConnection  # ty: ignore
 
 
 @pytest.fixture
