@@ -37,7 +37,7 @@ container = Container()
 app = create_app(container)
 ```
 
-This design makes testing straightforward. The test suite constructs its own `Container` in the fixture, swapping `MQTTConnection` for `MockMQTTConnection` — no monkeypatching. The simplicity of that swap is a direct consequence of the DI design.
+This design makes testing straightforward. The test suite constructs its own `Container` in the fixture, swapping `MQTTConnection` for `MockMQTTConnection`. The simplicity of that swap is a direct consequence of the DI design.
 
 ---
 
@@ -53,7 +53,7 @@ The two directions represent fundamentally different data flows with different c
 
 The `MessageBus` dispatches each published message to its subscribers using independent `asyncio.create_task` calls. Publishers return immediately without waiting for subscribers to finish or confirming delivery.
 
-All requests coming from external connections toward the inner domain are treated as best-effort. This is a deliberate trade-off: it keeps the bus non-blocking and ensures that a slow or failing subscriber cannot stall a publisher. The downside — that delivery order and error propagation are not guaranteed — is acceptable in this context, where the domain itself is the source of truth and the gateway is a transport layer, not a transaction coordinator.
+All requests coming from external connections toward the inner domain are treated as best-effort. This is a deliberate trade-off: it keeps the bus non-blocking and ensures that a slow or failing subscriber cannot stall a publisher. The downside — that delivery order and error propagation are not guaranteed — is acceptable in this context, where the domain itself is the source of truth and the gateway is just a transport layer.
 
 ### Cache subscribes to the outbound bus
 
@@ -67,23 +67,25 @@ The cache holds what *the domain has said*, not what external clients have reque
 
 ### `Connection` as the single extension point
 
-Every protocol adapter — HTTP, WebSocket, CoAP, MQTT, and any future protocol — implements the same abstract `Connection` interface, which exposes three things: `start()`, `stop()`, and an optional `router`.
+Every protocol adapter — HTTP, WebSocket, CoAP, MQTT, and any future protocol — implements the same abstract `Connection` interface, which exposes three things: `start()`, `stop()`.
 
-This was designed upfront to make adding new protocols a minimal, localised change. The only file that needs to change when a new protocol is introduced is `Container`, where the new `Connection` instance is registered into the appropriate group (`ExternalConnections` or `InternalConnections`). All lifecycle management, router inclusion, and bus wiring are handled automatically by the composite connection classes. No other part of the system needs to know a new protocol exists.
+This was designed upfront to make adding new protocols a minimal, localised change. The only file that needs to change when a new protocol is introduced is eather the `ExternalConnections` or `InternalConnections`, where the new `Connection` instance is registered. No other part of the system needs to know a new protocol exists.
 
 ```python
-# Adding a new external protocol is exactly this:
-external_connections = ExternalConnections(
-    connections=[
-        HTTPConnection(...),
-        WebsocketConnection(...),
-        CoAPConnection(...),
-        NewProtocolConnection(...),  # ← this is all that changes
-    ]
-)
+# Adding a new internal protocl 
+self._connections: list[Connection] = [
+    MQTTConnection(
+        inbound_bus=inbound_bus,
+        outbound_bus=outbound_bus,
+        health_handle=self._mqtt_health_handle,
+    ),
+    NewProtocol(
+        inbound_bus=inbound_bus,
+        outbound_bus=outbound_bus,
+        # Some dependencies 
+    )
+]
 ```
-
-### Composite connections as opaque groups
 
 `ExternalConnections` and `InternalConnections` act as composite coordinators. They gather the lifecycle of all their children and merge their routers, presenting a single unified surface to `main.py`.
 
@@ -119,6 +121,6 @@ The test suite replaces `MQTTConnection` with a `MockMQTTConnection` that echoes
 
 The goal is to simulate the full inbound → outbound round-trip without external infrastructure. Because the cache listens on the outbound bus, the mock ensures that a PUT or publish operation from any protocol immediately makes the value available via GET — exactly as it would in production after the message travels through the broker. This keeps tests self-contained, fast, and free of network dependencies, while still exercising the real application wiring end-to-end.
 
-The simplicity of this mock is itself a consequence of the DI design: because `MQTTConnection` is injected rather than imported, replacing it in tests requires no patching whatsoever.
+The simplicity of this mock is itself a consequence of the DI design.
 
 ---

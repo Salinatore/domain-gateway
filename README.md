@@ -90,18 +90,7 @@ docker run -e MQTT_BROKER_URL=localhost -p 8000:8000 domain-gateway
 
 ## Adding a New Protocol
 
-The architecture is built around a single `Connection` abstract class. Adding a new protocol means implementing the interface and registering it in `Container`.
-
-```python
-external_connections = ExternalConnections(
-    connections=[
-        HTTPConnection(cache, inbound_bus, outbound_bus),
-        WebsocketConnection(inbound_bus, outbound_bus),
-        CoAPConnection(cache, inbound_bus, outbound_bus),
-        NewConnection(inbound_bus, outbound_bus),  # ← add here
-    ]
-)
-```
+The architecture is built around a single `Connection` abstract class. Adding a new protocol means implementing the interface and registering it.
 
 The bus wiring, lifespan management, and router inclusion are all handled automatically by `ExternalConnections` (or `InternalConnections` for internal protocols).
 
