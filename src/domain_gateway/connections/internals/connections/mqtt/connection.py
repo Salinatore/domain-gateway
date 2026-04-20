@@ -117,19 +117,19 @@ class MQTTConnection(Connection):
                 await asyncio.sleep(RECONNECT_DELAY)
 
     async def _dispatch(self, topic: str, message: str) -> None:
-        try:
-            topic_payload = self._parse_message(topic, message)
+        topic_payload = self._parse_message(topic, message)
+        if topic_payload is not None:
             await self._outbound_bus.publish(topic, topic_payload)
-        except (ValidationError, ValueError) as e:
-            logger.error("Invalid payload for topic %s: %s", topic, e)
 
-    def _parse_message(self, topic: str, message: str) -> TopicPayload:
+    def _parse_message(self, topic: str, message: str) -> TopicPayload | None:
         payload_class = resolve_payload_class(topic)
         if payload_class is None:
-            raise ValueError(f"No mapping found for topic: {topic}")
-        logger.debug(
-            "Parsing message for topic %s with payload class %s",
-            topic,
-            payload_class.__name__,
-        )
-        return payload_class.model_validate_json(message)
+            logger.warning("Received message for unknown topic: %s", topic)
+        else:
+            try:
+                return payload_class.model_validate_json(message)
+            except (ValidationError, ValueError) as _:
+                logger.error(
+                    "Invalid payload for topic %s, received: %s", topic, message
+                )
+                return None
