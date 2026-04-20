@@ -129,7 +129,7 @@ class MQTTConnection(Connection):
             try:
                 return payload_class.model_validate_json(message)
             except (ValidationError, ValueError) as _:
-                logger.error(
+                logger.warning(
                     "Invalid payload for topic %s, received: %s", topic, message
                 )
                 return None
