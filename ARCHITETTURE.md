@@ -99,6 +99,10 @@ This separation means that when a topic's payload schema changes, only `payloads
 
 Adding a *new* topic is a broader change by nature: `paths.py`, `payloads.py`, and `mappings.py` all need a new entry, and any protocol adapter with hard-coded endpoints — such as the HTTP routers — must add a new route explicitly. Protocol-agnostic adapters like CoAP's `RobotsSubsite`, which resolve routes dynamically from the path, require no changes for new robot endpoints.
 
+### Health Monitor
+
+A health‑tracking component that registers connections (e.g., MQTT, CoAP) with a `critical` flag. Each connection receives a `HealthHandle` to report its current `Status.UP` or `Status.DOWN`. The monitor exposes `is_healthy()` which returns `True` only if **all critical connections are UP**, and `snapshot()` for a detailed JSON‑compatible status overview, now used only by HTTP endpoints.
+
 ---
 
 ## Protocol-Specific Decisions
