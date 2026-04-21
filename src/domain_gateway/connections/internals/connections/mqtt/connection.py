@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import random
 from typing import override
 
 from aiomqtt import Client
@@ -15,7 +16,8 @@ from domain_gateway.settings import settings
 
 logger = logging.getLogger(__name__)
 
-RECONNECT_DELAY: int = 2  # Seconds
+BASE_RECONNECT_DELAY: int = 2  # Seconds
+MAX_RECONNECT_DELAY: int = 60  # Seconds
 
 
 class MQTTConnection(Connection):
@@ -28,8 +30,8 @@ class MQTTConnection(Connection):
     - **Publisher**: drains an internal queue of (topic, payload) pairs
       produced by the inbound bus and forwards them to the broker.
 
-    Both tasks reconnect automatically after any error, with a short delay
-    defined by ``RECONNECT_DELAY``.
+    Both tasks reconnect automatically after any error, with exponential delay that starts as `BASE_RECONNECT_DELAY`
+    and a `MAX_RECONNECT_DELAY`.
     """
 
     def __init__(
@@ -39,7 +41,7 @@ class MQTTConnection(Connection):
         health_handle: HealthHandle,
     ) -> None:
         super().__init__(inbound_bus=inbound_bus, outbound_bus=outbound_bus)
-        self._health_handle = health_handle
+        self._health_handle = health_handle  # MQTT publish and subscribe are different tasks but here we treat them as a single critical connection. Be aware of this is an approximation.
         self._listener_task: asyncio.Task | None = None
         self._publisher_task: asyncio.Task | None = None
         self._message_queue: asyncio.Queue[tuple[TopicPath, TopicPayload]] | None = None
@@ -84,9 +86,11 @@ class MQTTConnection(Connection):
             await self._message_queue.put((topic, payload))
 
     async def _publisher(self) -> None:
+        delay: float = BASE_RECONNECT_DELAY
         while self._running and self._message_queue is not None:
             try:
                 async with Client(settings.mqtt_broker_url) as client:
+                    delay = BASE_RECONNECT_DELAY
                     self._health_handle.report(Status.UP)
                     while self._running:
                         topic, payload = await self._message_queue.get()
@@ -94,12 +98,17 @@ class MQTTConnection(Connection):
             except Exception as e:
                 self._health_handle.report(Status.DOWN)
                 logger.error("MQTT publisher error: %s", e)
-                await asyncio.sleep(RECONNECT_DELAY)
+                await asyncio.sleep(
+                    delay + random.uniform(0, 1)
+                )  # Add jitter to avoid thundering herd on reconnect
+                delay = min(delay * 2, MAX_RECONNECT_DELAY)
 
     async def _listener(self) -> None:
+        delay: float = BASE_RECONNECT_DELAY
         while self._running:
             try:
                 async with Client(settings.mqtt_broker_url) as client:
+                    delay = BASE_RECONNECT_DELAY
                     self._health_handle.report(Status.UP)
                     await client.subscribe("/#")
                     async for message in client.messages:
@@ -114,7 +123,10 @@ class MQTTConnection(Connection):
             except Exception as e:
                 self._health_handle.report(Status.DOWN)
                 logger.error("MQTT listener error: %s", e)
-                await asyncio.sleep(RECONNECT_DELAY)
+                await asyncio.sleep(
+                    delay + random.uniform(0, 1)
+                )  # Add jitter to avoid thundering herd on reconnect
+                delay = min(delay * 2, MAX_RECONNECT_DELAY)
 
     async def _dispatch(self, topic: str, message: str) -> None:
         topic_payload = self._parse_message(topic, message)
