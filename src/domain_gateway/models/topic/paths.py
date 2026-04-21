@@ -15,24 +15,24 @@ def make_validator(pattern: re.Pattern):
 
 # ── templates ────────────────────────────────────────────────────────────────
 
-POSITION_TOPIC_PATH = "robots/{robot_id}/position"
-NEIGHBORS_TOPIC_PATH = "robots/{robot_id}/neighbors"
-MOVEMENT_TOPIC_PATH = "robots/{robot_id}/move"
-SENSING_TOPIC_PATH = "robots/{robot_id}/sensing"
-FORMATION_TOPIC_PATH = "computing/inputs/formations"
-LEADER_TOPIC_PATH = "leader"
+POSITION_TOPIC_PATH = "/robots/{robot_id}/position"
+NEIGHBORS_TOPIC_PATH = "/robots/{robot_id}/neighbors"
+MOVEMENT_TOPIC_PATH = "/robots/{robot_id}/movement"
+SENSING_TOPIC_PATH = "/robots/{robot_id}/sensing"
+FORMATION_TOPIC_PATH = "/computing/inputs/formations"
+LEADER_TOPIC_PATH = "/computing/inputs/leader"
 
 # ── patterns ─────────────────────────────────────────────────────────────────
 
 TOPIC_PATTERN = re.compile(
-    r"^(robots/(\d+|\+)/(position|neighbors|move|sensing)|computing/inputs/(formations|leader))$"
+    r"^/(robots/(\d+|\+)/(position|neighbors|movement|sensing)|computing/inputs/(formations|leader))$"
 )
-POSITION_TOPIC_PATTERN = re.compile(r"^robots/(\d+|\+)/position$")
-NEIGHBORS_TOPIC_PATTERN = re.compile(r"^robots/(\d+|\+)/neighbors$")
-MOVEMENT_TOPIC_PATTERN = re.compile(r"^robots/(\d+|\+)/move$")
-SENSING_TOPIC_PATTERN = re.compile(r"^robots/(\d+|\+)/sensing$")
-FORMATION_TOPIC_PATTERN = re.compile(r"^computing/inputs/formations$")
-LEADER_TOPIC_PATTERN = re.compile(r"^leader$")
+POSITION_TOPIC_PATTERN = re.compile(r"^/robots/(\d+|\+)/position$")
+NEIGHBORS_TOPIC_PATTERN = re.compile(r"^/robots/(\d+|\+)/neighbors$")
+MOVEMENT_TOPIC_PATTERN = re.compile(r"^/robots/(\d+|\+)/movement$")
+SENSING_TOPIC_PATTERN = re.compile(r"^/robots/(\d+|\+)/sensing$")
+FORMATION_TOPIC_PATTERN = re.compile(r"^/computing/inputs/formations$")
+LEADER_TOPIC_PATTERN = re.compile(r"^/computing/inputs/leader$")
 
 # ── annotated types ───────────────────────────────────────────────────────────
 
