@@ -10,13 +10,33 @@ from domain_gateway.core.monitor import HealthMonitor
 
 
 class LifespanService(Protocol):
-    async def start(self) -> None: ...
+    """Protocol for services that participate in the application lifespan.
 
-    async def stop(self) -> None: ...
+    Any object implementing ``start`` and ``stop`` coroutines satisfies this
+    protocol and can be registered with the container to be started and stopped
+    alongside the FastAPI application.
+    """
+
+    async def start(self) -> None:
+        """Start the service and acquire any required resources."""
+        ...
+
+    async def stop(self) -> None:
+        """Stop the service and release any held resources."""
+        ...
 
 
 class Container:
+    """Composition root that constructs and wires all application dependencies.
+
+    Instantiated once at module level, the container owns every shared
+    singleton — buses, cache, health monitor, connection groups, and the root
+    router — and exposes them to the FastAPI lifespan and application factory
+    via properties.
+    """
+
     def __init__(self) -> None:
+        """Construct and wire all application."""
         # Cross-project services
         self._inbound_bus: Bus = MessageBus()
         self._outbound_bus: Bus = MessageBus()
@@ -47,16 +67,36 @@ class Container:
 
     @property
     def lifespan_services(self) -> list[LifespanService]:
+        """Services that must be started and stopped with the application.
+
+        Returns:
+            List of ``LifespanService`` instances.
+        """
         return self._lifespan_services
 
     @property
     def internal_connections(self) -> InternalConnections:
+        """Composite adapter managing all internal protocol connections.
+
+        Returns:
+            The ``InternalConnections`` instance.
+        """
         return self._internal_connections
 
     @property
     def external_connections(self) -> ExternalConnections:
+        """Composite adapter managing all external-facing protocol connections.
+
+        Returns:
+            The ``ExternalConnections`` instance.
+        """
         return self._external_connections
 
     @property
     def root_router(self) -> APIRouter:
+        """Shared FastAPI router that all HTTP and WebSocket routes are mounted on.
+
+        Returns:
+            The ``APIRouter`` instance populated by the connections that use FastAPI endpoints.
+        """
         return self._root_router

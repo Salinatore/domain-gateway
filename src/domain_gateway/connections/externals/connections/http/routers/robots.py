@@ -33,7 +33,21 @@ class RobotRouter:
 
         # ── Position ──────────────────────────────────────────────────────────────────
 
-        @self._robots_router.get("/{robot_id}/position", response_model=RobotPosition)
+        @self._robots_router.get(
+            "/{robot_id}/position",
+            response_model=RobotPosition,
+            responses={
+                status.HTTP_404_NOT_FOUND: {
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "detail": "Position for robot {robot_id} not found"
+                            }
+                        }
+                    },
+                }
+            },
+        )
         async def read_robot_position(robot_id: RobotID) -> TopicPayload:
             position = await cache.get(POSITION_TOPIC_PATH.format(robot_id=robot_id))
             if position is None:
@@ -63,7 +77,21 @@ class RobotRouter:
 
         # ── Neighborhood ──────────────────────────────────────────────────────────────
 
-        @self._robots_router.get("/{robot_id}/neighbors", response_model=RobotNeighbors)
+        @self._robots_router.get(
+            "/{robot_id}/neighbors",
+            response_model=RobotNeighbors,
+            responses={
+                status.HTTP_404_NOT_FOUND: {
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "detail": "Neighbors for robot {robot_id} not found"
+                            }
+                        }
+                    },
+                }
+            },
+        )
         async def read_robot_neighborhood(robot_id: RobotID) -> TopicPayload:
             neighbors = await cache.get(NEIGHBORS_TOPIC_PATH.format(robot_id=robot_id))
             if neighbors is None:
@@ -95,7 +123,21 @@ class RobotRouter:
 
         # ── Movement ──────────────────────────────────────────────────────────────────
 
-        @self._robots_router.get("/{robot_id}/movement", response_model=RobotMovement)
+        @self._robots_router.get(
+            "/{robot_id}/movement",
+            response_model=RobotMovement,
+            responses={
+                status.HTTP_404_NOT_FOUND: {
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "detail": "Movement for robot {robot_id} not found"
+                            }
+                        }
+                    },
+                }
+            },
+        )
         async def read_robot_movement(robot_id: RobotID) -> TopicPayload:
             movement = await cache.get(MOVEMENT_TOPIC_PATH.format(robot_id=robot_id))
             if movement is None:
@@ -127,7 +169,21 @@ class RobotRouter:
 
         # ── Sensing ───────────────────────────────────────────────────────────────────
 
-        @self._robots_router.get("/{robot_id}/sensing", response_model=RobotSensing)
+        @self._robots_router.get(
+            "/{robot_id}/sensing",
+            response_model=RobotSensing,
+            responses={
+                status.HTTP_404_NOT_FOUND: {
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "detail": "Sensing for robot {robot_id} not found"
+                            }
+                        }
+                    },
+                }
+            },
+        )
         async def read_robot_sensing(robot_id: RobotID) -> TopicPayload:
             sensing = await cache.get(SENSING_TOPIC_PATH.format(robot_id=robot_id))
             if sensing is None:

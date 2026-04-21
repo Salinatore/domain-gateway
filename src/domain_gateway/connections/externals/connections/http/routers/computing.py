@@ -19,7 +19,19 @@ class ComputingRouter:
 
         # ── Formation ──────────────────────────────────────────────────────────────────
 
-        @self._computing_inputs_router.get("/formation", response_model=Formation)
+        @self._computing_inputs_router.get(
+            "/formation",
+            response_model=Formation,
+            responses={
+                status.HTTP_404_NOT_FOUND: {
+                    "content": {
+                        "application/json": {
+                            "example": {"detail": "Formation not found"}
+                        }
+                    },
+                }
+            },
+        )
         async def read_formations() -> TopicPayload:
             formation = await cache.get(FORMATION_TOPIC_PATH)
             if formation is None:
@@ -47,7 +59,17 @@ class ComputingRouter:
 
         # ── Leader ────────────────────────────────────────────────────────────────────
 
-        @self._computing_inputs_router.get("/leader", response_model=Leader)
+        @self._computing_inputs_router.get(
+            "/leader",
+            response_model=Leader,
+            responses={
+                status.HTTP_404_NOT_FOUND: {
+                    "content": {
+                        "application/json": {"example": {"detail": "Leader not found"}}
+                    },
+                }
+            },
+        )
         async def read_leader() -> TopicPayload:
             leader = await cache.get(LEADER_TOPIC_PATH)
             if leader is None:
