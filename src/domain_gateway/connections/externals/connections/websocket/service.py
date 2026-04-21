@@ -4,7 +4,7 @@ import logging
 from typing import Protocol
 from uuid import UUID, uuid4
 
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import WebSocket, WebSocketDisconnect, status
 from pydantic import ValidationError
 from starlette import status
 
