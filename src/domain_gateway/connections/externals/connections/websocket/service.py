@@ -1,4 +1,3 @@
-# src/domain_gateway/connections/externals/connections/websocket/service.py
 import asyncio
 import logging
 from typing import Protocol
@@ -6,7 +5,6 @@ from uuid import UUID, uuid4
 
 from fastapi import WebSocket, WebSocketDisconnect, status
 from pydantic import ValidationError
-from starlette import status
 
 from domain_gateway.connections.externals.connections.websocket.models.ws import (
     PublishMessage,
