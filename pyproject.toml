@@ -1,5 +1,5 @@
 [project]
-name = "domain_gateway"
+name = "domain-gateway"
 version = "0.1.0"
 authors = [
     { name = "Alessandro Gardini", email = "alessandro.gardini7@studio.unibo.it" }
