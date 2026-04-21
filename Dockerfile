@@ -1,4 +1,5 @@
-# This file is derived from an example provided by uv at https://github.com/astral-sh/uv-docker-example/blob/main/standalone.Dockerfile
+# This file is derived from an example provided by uv at
+#   https://github.com/astral-sh/uv-docker-example/blob/main/standalone.Dockerfile
 # Updated base image from bookworm-slim to trixie-slim
 
 # First, build the application in the `/app` directory
@@ -47,6 +48,10 @@ USER nonroot
 
 # Use `/app` as the working directory
 WORKDIR /app
+
+EXPOSE 8000
+EXPOSE 8683
+EXPOSE 5683/udp
 
 # Run the FastAPI application by default
 CMD ["fastapi", "run", "--host", "0.0.0.0"]
